@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Etiquetas · Acceso de clientes</title>
+<style>
+  :root { --accent:#6e1f2a; --c-brand:#6e1f2a; --c-name:#111; --c-house:#111; --c-handle:#111; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Arial, Helvetica, sans-serif; background:#eeeeee; }
+  @page { size: A4; margin: 0; }
+
+  /* ---------- LOGIN ---------- */
+  #login { display:none; min-height:100vh; align-items:center; justify-content:center; padding:20px; }
+  .loginbox { background:#fff; width:100%; max-width:380px; border-radius:16px; box-shadow:0 6px 24px rgba(0,0,0,.12); padding:28px 26px; text-align:center; }
+  .loginbox h1 { font-size:20px; margin:0 0 4px; color:#1c1c1c; }
+  .loginbox p { font-size:13px; color:#777; margin:0 0 18px; }
+  .loginbox input { width:100%; padding:11px 12px; font-size:14px; border:1px solid #ccc; border-radius:9px; margin:7px 0; }
+  .loginbox button { width:100%; background:#1a1a1a; color:#fff; border:none; padding:12px; font-size:15px; font-weight:600; border-radius:9px; cursor:pointer; margin-top:10px; }
+  .loginbox .err { color:#a33; font-size:13px; min-height:18px; margin-top:8px; }
+
+  /* ---------- APP ---------- */
+  #app { display:none; }
+  .topbar { position:sticky; top:0; z-index:20; background:#1a1a1a; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:10px 16px; }
+  .topbar .who { font-size:14px; } .topbar .who b { color:#fff; }
+  .topbar button { background:#fff; color:#1a1a1a; border:none; padding:8px 14px; font-size:13px; border-radius:8px; cursor:pointer; font-weight:600; }
+
+  .panel { max-width: 760px; margin: 20px auto; background:#fff; padding:20px 22px; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.10); }
+  .panel h2 { margin:0 0 4px; font-size:19px; color:#1c1c1c; }
+  .panel p  { margin:0 0 12px; font-size:13px; color:#666; line-height:1.5; }
+  .sect { margin-top:16px; padding-top:14px; border-top:1px dashed #e2e2e2; }
+  .sect h3 { font-size:14px; margin:0 0 10px; color:#333; }
+
+  .card { border:1px solid #e2e2e2; border-radius:11px; padding:12px 14px; margin:10px 0; background:#fafafa; }
+  .card .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
+  .card input[type=text] { width:100%; padding:8px 9px; font-size:13px; border:1px solid #ccc; border-radius:7px; }
+  .card .full { grid-column: 1 / -1; }
+  .card .imgrow { display:flex; align-items:center; gap:10px; margin-top:8px; flex-wrap:wrap; }
+  .thumb { width:42px; height:42px; border:1px solid #ddd; border-radius:6px; object-fit:contain; background:#fff; }
+  .card .actions { display:flex; gap:8px; margin-top:8px; }
+  .mini { font-size:12px; padding:6px 10px; border-radius:7px; border:1px solid #ccc; background:#fff; color:#333; cursor:pointer; }
+  .mini.del { color:#a33; border-color:#e3b7b7; }
+
+  .field { margin:12px 0; }
+  .field label { display:block; font-size:13px; color:#333; margin-bottom:5px; font-weight:600; }
+  .field input[type=text], .field select { padding:9px 10px; font-size:13px; border:1px solid #ccc; border-radius:8px; }
+  .field input[type=text] { width:240px; }
+  .colors { display:grid; grid-template-columns: 1fr 1fr; gap:10px 16px; }
+  .colors .field { margin:4px 0; }
+  .colors select { width:100%; }
+  .row { display:flex; gap:16px; align-items:center; margin:12px 0; flex-wrap:wrap; }
+  label.opt { font-size:13px; color:#333; }
+  button.big { background:#1a1a1a; color:#fff; border:none; padding:12px 22px; font-size:14px; border-radius:9px; cursor:pointer; font-weight:600; }
+  button.ghost { background:#fff; color:#1a1a1a; border:1px solid #ccc; padding:12px 22px; font-size:14px; border-radius:9px; cursor:pointer; font-weight:600; }
+  button:hover { opacity:.92; }
+  #saveMsg { font-size:13px; margin-left:6px; }
+
+  /* ---------- HOJA A4 (5 x 10 = 50) ---------- */
+  .page { position:relative; width:210mm; height:297mm; padding:13.5mm 5mm; margin:20px auto; background:#fff; box-shadow:0 3px 16px rgba(0,0,0,.14); }
+  .grid { display:grid; grid-template-columns: repeat(5, 40mm); grid-template-rows: repeat(10, 27mm); }
+  .wm { position:absolute; inset:0; z-index:5; pointer-events:none; background-repeat:repeat; }
+
+  .label { position:relative; width:40mm; height:27mm; border:0.12mm solid #ececec; display:flex; flex-direction:row; align-items:stretch; overflow:hidden; }
+  .content { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:1.8mm 2mm; }
+  .imgbox { width:15mm; height:100%; display:flex; align-items:center; justify-content:center; padding:0.5mm; border-left:0.2mm solid var(--accent); }
+  .imgbox img { width:100%; height:100%; object-fit:cover; }
+  .imgbox.fit-contain img { object-fit:contain; }
+
+  .brand { font-family:Arial, Helvetica, sans-serif; font-size:4.6pt; letter-spacing:1.6pt; text-transform:uppercase; color:var(--c-brand); font-weight:700; white-space:nowrap; }
+  .name { font-family:Georgia,'Times New Roman',serif; line-height:1.03; color:var(--c-name); letter-spacing:.2pt; margin-top:1mm; max-width:100%; max-height:8.5mm; overflow:hidden; }
+  .name.s1 { font-size:11pt; } .name.s2 { font-size:9pt; } .name.s3 { font-size:7.2pt; }
+  .sep { width:6mm; border-top:0.35mm solid var(--accent); margin:1mm 0 .8mm; }
+  .insplbl { font-family:Arial, Helvetica, sans-serif; font-size:3pt; letter-spacing:1.2pt; text-transform:uppercase; color:var(--accent); }
+  .house { font-family:Georgia,'Times New Roman',serif; text-transform:uppercase; letter-spacing:1.5pt; color:var(--c-house); margin-top:.4mm; max-width:100%; overflow:hidden; }
+  .house.h1 { font-size:7pt; } .house.h2 { font-size:5.6pt; } .house.h3 { font-size:4.5pt; }
+  .conc { font-family:Arial, Helvetica, sans-serif; font-size:3.1pt; letter-spacing:1pt; text-transform:uppercase; color:#777; margin-top:1mm; }
+  .handle { font-family:Arial, Helvetica, sans-serif; font-size:3.6pt; letter-spacing:.2pt; color:var(--c-handle); margin-top:1mm; font-weight:700; white-space:nowrap; }
+  .icons { display:flex; gap:1.2mm; justify-content:center; align-items:center; margin-top:.8mm; }
+  .icons svg { width:2.6mm; height:2.6mm; display:block; }
+
+  .label.has-img .name.s1 { font-size:8pt; } .label.has-img .name.s2 { font-size:6.8pt; } .label.has-img .name.s3 { font-size:5.6pt; }
+  .label.has-img .house.h1 { font-size:5.4pt; } .label.has-img .house.h2 { font-size:4.6pt; } .label.has-img .house.h3 { font-size:3.7pt; }
+  .label.has-img .brand { font-size:4pt; letter-spacing:1.1pt; }
+  .label.has-img .conc { font-size:2.8pt; }
+  .label.has-img .handle { font-size:3.1pt; }
+  .label.has-img .icons svg { width:2.3mm; height:2.3mm; }
+
+  @media print {
+    body { background:#fff; }
+    .topbar, .panel { display:none; }
+    .page { margin:0; box-shadow:none; }
+    .wm { display:none; }            /* la marca de agua NO se imprime */
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ===================== LOGIN ===================== -->
+  <div id="login">
+    <div class="loginbox">
+      <h1>Acceso de clientes</h1>
+      <p>Ingresa con el correo y la contraseña que te entregaron.</p>
+      <input type="email" id="email" placeholder="Correo (ID)" autocomplete="username">
+      <input type="password" id="password" placeholder="Contraseña" autocomplete="current-password">
+      <button id="loginBtn" onclick="entrar()">Entrar</button>
+      <div class="err" id="loginErr"></div>
+    </div>
+  </div>
+
+  <!-- ===================== APP ===================== -->
+  <div id="app">
+    <div class="topbar">
+      <div class="who">Tienda: <b id="tiendaLabel">—</b></div>
+      <div>
+        <button onclick="guardar()" id="saveBtn">Guardar</button>
+        <button onclick="salir()">Salir</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Tus etiquetas · 4.0 × 2.7 cm · 50 por hoja</h2>
+      <p>Agrega tus perfumes con su imagen, elige los colores y guarda. Tus datos quedan asociados solo a tu cuenta.</p>
+
+      <div id="cards"></div>
+      <button class="ghost" onclick="addPerfume()">＋ Agregar perfume</button>
+
+      <div class="sect">
+        <h3>Datos de tu tienda</h3>
+        <div class="field">
+          <label>Usuario / red social (aparece en todas)</label>
+          <input type="text" id="handle" oninput="onControlChange()">
+        </div>
+      </div>
+
+      <div class="sect">
+        <h3>Colores</h3>
+        <div class="colors">
+          <div class="field"><label>Acento (línea, "Tipo", filo)</label><select id="accent" onchange="onControlChange()"></select></div>
+          <div class="field"><label>Nombre de la tienda</label><select id="cBrand" onchange="onControlChange()"></select></div>
+          <div class="field"><label>Nombre del perfume</label><select id="cName" onchange="onControlChange()"></select></div>
+          <div class="field"><label>Casa / marca</label><select id="cHouse" onchange="onControlChange()"></select></div>
+          <div class="field"><label>Usuario redes</label><select id="cHandle" onchange="onControlChange()"></select></div>
+        </div>
+      </div>
+
+      <div class="sect">
+        <h3>Opciones</h3>
+        <div class="field">
+          <label>Palabra antes de la casa (vacía = ninguna)</label>
+          <input type="text" id="conn" list="conns" oninput="onControlChange()">
+          <datalist id="conns"><option value="Tipo"><option value="Versión de"><option value="Al estilo de"><option value="De"><option value=""></datalist>
+        </div>
+        <div class="field">
+          <label>Ajuste de la imagen</label>
+          <select id="fit" onchange="onControlChange()">
+            <option value="cover">Rellenar (sin espacios) — recomendado</option>
+            <option value="contain">Contener (imagen completa)</option>
+          </select>
+        </div>
+        <div class="row">
+          <label class="opt"><input type="radio" name="modo" value="lista" checked onchange="renderSheet()"> Rellenar hoja con la lista (ciclo)</label>
+          <label class="opt"><input type="radio" name="modo" value="uno" onchange="renderSheet()"> Solo el 1° · x50 iguales</label>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:16px;">
+        <button class="big" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+        <button class="ghost" onclick="guardar()">Guardar cambios</button>
+        <span id="saveMsg"></span>
+      </div>
+      <p style="font-size:12px;color:#999;">Al imprimir en Chrome: Márgenes = <b>Ninguno</b> · Escala = <b>100</b> · desmarca "Encabezados y pies de página" · activa <b>Gráficos de fondo</b>. La marca de agua no sale en la impresión.</p>
+    </div>
+
+    <div class="page"><div class="wm" id="wm"></div><div class="grid" id="grid"></div></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
