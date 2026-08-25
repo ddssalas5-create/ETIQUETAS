@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administrador · Etiquetas</title>
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:Arial,Helvetica,sans-serif; background:#eeeeee; }
+  #login { display:none; min-height:100vh; align-items:center; justify-content:center; padding:20px; }
+  .loginbox { background:#fff; width:100%; max-width:380px; border-radius:16px; box-shadow:0 6px 24px rgba(0,0,0,.12); padding:28px 26px; text-align:center; }
+  .loginbox h1 { font-size:20px; margin:0 0 4px; } .loginbox p { font-size:13px; color:#777; margin:0 0 18px; }
+  .loginbox input { width:100%; padding:11px 12px; font-size:14px; border:1px solid #ccc; border-radius:9px; margin:7px 0; }
+  .loginbox button { width:100%; background:#1a1a1a; color:#fff; border:none; padding:12px; font-size:15px; font-weight:600; border-radius:9px; cursor:pointer; margin-top:10px; }
+  .loginbox .err { color:#a33; font-size:13px; min-height:18px; margin-top:8px; }
+  .loginbox a { display:block; margin-top:14px; font-size:12px; color:#999; }
+
+  #admin { display:none; }
+  .topbar { background:#1a1a1a; color:#fff; display:flex; justify-content:space-between; align-items:center; padding:10px 16px; }
+  .topbar button { background:#fff; color:#1a1a1a; border:none; padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; }
+  .panel { max-width:820px; margin:20px auto; background:#fff; padding:22px; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.10); }
+  .panel h2 { margin:0 0 6px; } .panel p { color:#666; font-size:13px; line-height:1.5; }
+  table { width:100%; border-collapse:collapse; margin-top:14px; }
+  th,td { text-align:left; padding:10px 8px; border-bottom:1px solid #eee; font-size:14px; }
+  th { color:#888; font-size:12px; text-transform:uppercase; letter-spacing:.5px; }
+  td input { width:100%; padding:8px 9px; border:1px solid #ccc; border-radius:7px; font-size:14px; }
+  td .save { background:#1a1a1a; color:#fff; border:none; padding:8px 12px; border-radius:7px; cursor:pointer; font-size:13px; }
+  .rowmsg { font-size:12px; margin-left:6px; }
+  .note { background:#fbf7ef; border:1px solid #efe3cf; border-radius:10px; padding:12px 14px; font-size:13px; color:#7a5c1e; margin-top:16px; line-height:1.6; }
+</style>
+</head>
+<body>
+  <div id="login">
+    <div class="loginbox">
+      <h1>Panel de administrador</h1>
+      <p>Ingresa con tu cuenta de administrador.</p>
+      <input type="email" id="email" placeholder="Correo" autocomplete="username">
+      <input type="password" id="password" placeholder="Contraseña" autocomplete="current-password">
+      <button id="loginBtn" onclick="entrar()">Entrar</button>
+      <div class="err" id="loginErr"></div>
+      <a href="index.html">← Volver al acceso de clientes</a>
+    </div>
+  </div>
+
+  <div id="admin">
+    <div class="topbar"><div>Administrador: <b id="adminEmail"></b></div><button onclick="salir()">Salir</button></div>
+    <div class="panel">
+      <h2>Usuarios</h2>
+      <p>Aquí ves todas las cuentas. Asigna el <b>nombre de marca</b> de cada cliente; ellos no lo pueden cambiar.</p>
+      <table><thead><tr><th>Correo</th><th>Nombre de marca</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+      <div class="note">
+        <b>¿Cómo doy acceso a un cliente nuevo?</b><br>
+        1) En Supabase → Authentication → Users → <b>Add user</b> (correo + contraseña).<br>
+        2) Vuelve aquí y actualiza; aparecerá en la lista. Escribe su nombre de marca y pulsa Guardar.<br>
+        3) Entrega al cliente la URL de la app + su correo + su contraseña.
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
