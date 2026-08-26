@@ -119,7 +119,8 @@
   .imgmid { flex:none; min-height:0; width:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; margin:calc(0.6mm*var(--lscale)) 0; }
   .imgmid img { max-width:78%; max-height:100%; object-fit:contain; }
   /* Retrato completo: la botella se ve más grande y recortada (no completa) para verse distinta al modelo "Botella al centro" */
-  .label.model-retrato-completo .imgmid img { max-width:98%; object-fit:cover; object-position:top center; -webkit-mask-image:linear-gradient(to bottom, black 82%, transparent 100%); mask-image:linear-gradient(to bottom, black 82%, transparent 100%); }
+  /* Retrato completo: la botella se ve grande y recortada ("a la mitad"), no completa */
+  .imgbox.retrato { width:52%; }
 
   .tplrow { display:flex; justify-content:space-between; align-items:center; padding:9px 10px; border:1px solid #eee; border-radius:9px; margin:6px 0; background:#fafafa; font-size:13px; }
   .tplname em { color:#999; font-style:normal; font-size:12px; }

@@ -189,7 +189,7 @@ function labelNegro(it,s,social){
   if(s.model==='tres-columnas') return labelNegroTresCol(it,s,social);
   if(s.model==='redes-abajo') return labelNegroRedesAbajo(it,s,social);
   if(s.model==='botella-centro') return labelNegroVertical(it,s,social,true);
-  if(s.model==='retrato-completo') return labelNegroVertical(it,s,social,false);
+  if(s.model==='retrato-completo') return labelNegroRetrato(it,s,social);
   return labelNegroClasico(it,s,social);
 }
 // Modelo 1 — Clásico negro: botella izquierda, texto derecha, logo grande (sin concentración)
@@ -240,7 +240,6 @@ function labelNegroRedesAbajo(it,s,social){
     (s.handle?'<div class="botbar opt-social fitbox">'+social+'</div>':'');
 }
 // Modelos 5 y 6 — Verticales (retrato): casa/nombre arriba, botella al centro, concentración+marca+redes abajo.
-// "arriba" = true pone la casa antes del nombre (botella-centro); false pone el nombre antes de la casa (retrato-completo).
 function labelNegroVertical(it,s,social,casaPrimero){
   const nombreYCasa = casaPrimero
     ? (it.casa?'<div class="opt-house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'') +
@@ -254,6 +253,18 @@ function labelNegroVertical(it,s,social,casaPrimero){
       '<div class="brand">'+esc(brandName)+'</div>'+
       (s.handle?'<div class="opt-social">'+social+'</div>':'')+
     '</div>';
+}
+// Modelo — Retrato completo: logo + texto a la izquierda, botella grande que se recorta ("a la mitad") a la derecha
+function labelNegroRetrato(it,s,social){
+  return '<div class="content fitbox">'+
+      (it.logo?'<div class="opt-logo logowrap big"><img class="logoimg" src="'+it.logo+'"></div>':'')+
+      '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
+      (it.casa?'<div class="opt-house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'')+
+      (it.conc?'<div class="opt-conc conc">'+esc(it.conc)+'</div>':'')+
+      '<div class="brand">'+esc(brandName)+'</div>'+
+      (s.handle?'<div class="opt-social">'+social+'</div>':'')+
+    '</div>'+
+    (it.img?'<div class="imgbox retrato"><img src="'+it.img+'"></div>':'');
 }
 function renderSheet(){
   const s=S().settings;
