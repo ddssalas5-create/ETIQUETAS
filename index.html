@@ -85,11 +85,7 @@
   .icons { display:flex; gap:calc(1.2mm*var(--lscale)); justify-content:center; align-items:center; margin-top:calc(.8mm*var(--lscale)); }
   .icons svg { width:calc(2.6mm*var(--lscale)); height:calc(2.6mm*var(--lscale)); display:block; }
 
-  .label.has-img .name.s1 { font-size:calc(8pt*var(--lscale)); } .label.has-img .name.s2 { font-size:calc(6.8pt*var(--lscale)); } .label.has-img .name.s3 { font-size:calc(5.6pt*var(--lscale)); }
-  .label.has-img .house.h1,.label.has-img .casa.h1 { font-size:calc(5.4pt*var(--lscale)); } .label.has-img .house.h2,.label.has-img .casa.h2 { font-size:calc(4.6pt*var(--lscale)); } .label.has-img .house.h3,.label.has-img .casa.h3 { font-size:calc(3.7pt*var(--lscale)); }
-  .label.has-img .brand { font-size:calc(4pt*var(--lscale)); letter-spacing:calc(1.1pt*var(--lscale)); }
-  .label.has-img .conc { font-size:calc(2.8pt*var(--lscale)); } .label.has-img .handle { font-size:calc(3.1pt*var(--lscale)); }
-  .label.has-img .icons svg { width:calc(2.3mm*var(--lscale)); height:calc(2.3mm*var(--lscale)); } .label.has-img .logoimg { max-width:calc(15mm*var(--lscale)); max-height:calc(4.2mm*var(--lscale)); }
+  /* (el tamaño con imagen ahora lo decide el autoajuste según el espacio real, sin un recorte fijo aparte) */
   .label.has-img .logowrap.big .logoimg { max-width:calc(21mm*var(--lscale)); max-height:calc(7mm*var(--lscale)); }
 
   /* Modelo: Redes verticales — usuario escrito verticalmente + iconos, columna a la derecha */
@@ -115,8 +111,15 @@
 
   /* Modelos verticales (Botella al centro / Retrato completo) — texto arriba y abajo, botella llenando el medio */
   .content.vertical { justify-content:flex-start; }
-  .imgmid { flex:none; height:44%; min-height:0; width:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; margin:calc(1mm*var(--lscale)) 0; }
+  .content.vertical > .opt-house,
+  .content.vertical > .name,
+  .content.vertical > .brand,
+  .content.vertical > .opt-conc,
+  .content.vertical > .opt-social { margin-top:calc(0.4mm*var(--lscale)); }
+  .imgmid { flex:none; min-height:0; width:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; margin:calc(0.6mm*var(--lscale)) 0; }
   .imgmid img { max-width:78%; max-height:100%; object-fit:contain; }
+  /* Retrato completo: la botella se ve más grande y recortada (no completa) para verse distinta al modelo "Botella al centro" */
+  .label.model-retrato-completo .imgmid img { max-width:98%; object-fit:cover; object-position:top center; -webkit-mask-image:linear-gradient(to bottom, black 82%, transparent 100%); mask-image:linear-gradient(to bottom, black 82%, transparent 100%); }
 
   .tplrow { display:flex; justify-content:space-between; align-items:center; padding:9px 10px; border:1px solid #eee; border-radius:9px; margin:6px 0; background:#fafafa; font-size:13px; }
   .tplname em { color:#999; font-style:normal; font-size:12px; }

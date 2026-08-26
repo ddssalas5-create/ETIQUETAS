@@ -334,14 +334,34 @@ function autofitLabels(){
   labels.forEach(function(l){ (byItem[l.dataset.itemIdx] = byItem[l.dataset.itemIdx]||[]).push(l); });
   Object.keys(byItem).forEach(function(idx){
     const group = byItem[idx];
+    group[0].querySelectorAll('.imgmid').forEach(function(im){ im.style.height='10px'; });
     const result = autofitOne(group[0]); // mide/ajusta solo la primera; el resto son idénticas
+    fillImgMid(group[0]);
     for(let i=1;i<group.length;i++){
       group[i].style.setProperty('--lscale', result.scale.toFixed(3));
       DROP_ORDER.forEach(function(sel){
         group[i].querySelectorAll(sel).forEach(function(e){ e.style.display = result.hidden.has(sel) ? 'none' : ''; });
       });
+      fillImgMid(group[i]);
     }
   });
+}
+// La imagen central de los modelos verticales debe llenar TODO el espacio sobrante entre los textos
+// de arriba y abajo. En vez de predecir el tamaño con matemática (poco fiable por ajustes de línea y
+// márgenes), se busca directamente —igual que con el texto— el mayor alto que realmente quepa.
+function fillImgMid(labelEl){
+  const content = labelEl.querySelector('.content.vertical');
+  if(!content) return;
+  const imgmid = content.querySelector('.imgmid');
+  if(!imgmid) return;
+  function fits(h){ imgmid.style.height = h.toFixed(1)+'px'; return content.scrollHeight <= content.clientHeight + 0.5; }
+  if(!fits(10)){ imgmid.style.height='10px'; return; }
+  let lo=10, hi=Math.max(20, content.clientHeight);
+  for(let i=0;i<12;i++){
+    const mid=(lo+hi)/2;
+    if(fits(mid)) lo=mid; else hi=mid;
+  }
+  fits(lo);
 }
 
 // ---------- plantillas ----------
