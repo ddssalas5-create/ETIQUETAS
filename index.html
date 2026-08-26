@@ -92,25 +92,19 @@
   .label.has-img .icons svg { width:calc(2.3mm*var(--lscale)); height:calc(2.3mm*var(--lscale)); } .label.has-img .logoimg { max-width:calc(15mm*var(--lscale)); max-height:calc(4.2mm*var(--lscale)); }
   .label.has-img .logowrap.big .logoimg { max-width:calc(21mm*var(--lscale)); max-height:calc(7mm*var(--lscale)); }
 
-  /* Modelo: Redes verticales — columna de iconos apilados a la derecha */
+  /* Modelo: Redes verticales — usuario escrito verticalmente + iconos, columna a la derecha */
   .label.model-redes-verticales .content { flex:1; }
-  .vicons { width:calc(6mm*var(--lscale)); flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:calc(2mm*var(--lscale)); border-left:max(0.1mm,calc(0.15mm*var(--lscale))) solid rgba(255,255,255,0.15); }
+  .vicons { width:calc(7mm*var(--lscale)); flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:calc(1.6mm*var(--lscale)); border-left:max(0.1mm,calc(0.15mm*var(--lscale))) solid rgba(255,255,255,0.15); padding:calc(1mm*var(--lscale)) 0; overflow:hidden; }
+  .vhandle { writing-mode:vertical-rl; transform:rotate(180deg); font-family:Arial,Helvetica,sans-serif; font-weight:700; font-size:calc(3.4pt*var(--lscale)); letter-spacing:calc(.3pt*var(--lscale)); color:var(--c-handle); white-space:nowrap; }
+  .vicons-row { display:flex; flex-direction:column; align-items:center; gap:calc(1.6mm*var(--lscale)); }
   .vicons svg { width:calc(3mm*var(--lscale)); height:calc(3mm*var(--lscale)); display:block; }
 
-  /* Modelo: Marco dorado — borde decorativo interior */
-  .label.model-marco-dorado .frame { position:absolute; inset:calc(1.3mm*var(--lscale)); border:max(0.15mm,calc(0.28mm*var(--lscale))) solid var(--accent); pointer-events:none; z-index:2; }
-
-  /* Columna lateral compartida (Tres columnas / Logo a la izquierda): logo + redes o logo + casa */
-  .sidecol { width:28%; flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:calc(1.3mm*var(--lscale)); padding:calc(1.2mm*var(--lscale)); overflow:hidden; }
-  .sidecol { border-left:max(0.1mm,calc(0.15mm*var(--lscale))) solid rgba(255,255,255,0.15); }
-  .sidecol.right-divider { border-left:none; border-right:max(0.1mm,calc(0.15mm*var(--lscale))) solid rgba(255,255,255,0.15); }
-  .sidecol .logowrap { width:100%; }
-  .sidecol .logoimg { max-width:88% !important; max-height:calc(9mm*var(--lscale)) !important; }
-  .sidecol .icons { flex-wrap:wrap; }
+  /* Modelo: Tres columnas — columna decorativa con el logo repetido en patrón vertical */
+  .sidecol { width:24%; flex-shrink:0; overflow:hidden; border-left:max(0.1mm,calc(0.15mm*var(--lscale))) solid rgba(255,255,255,0.15); }
+  .sidecol.tiled { background-repeat:repeat-y; background-position:top center; background-size:88% auto; }
   .imgbox.right { width:36%; }
-  /* Modelos de 3 columnas: dar más aire al texto central reduciendo imagen y columna lateral */
-  .label.model-tres-columnas .imgbox.left, .label.model-logo-izquierda .imgbox.right { width:33%; }
-  .label.model-tres-columnas .sidecol, .label.model-logo-izquierda .sidecol { width:24%; }
+  .label.clasico .imgbox { width:28%; }
+  .label.model-tres-columnas .imgbox.left { width:36%; }
 
   /* Modelo: Redes abajo — franja de redes a todo el ancho, debajo de imagen+texto */
   .label.model-redes-abajo { flex-direction:column; }
@@ -118,6 +112,11 @@
   .label.model-redes-abajo .content { padding-bottom:calc(0.6mm*var(--lscale)); }
   .botbar { flex-shrink:0; width:100%; display:flex; align-items:center; justify-content:center; gap:calc(2.2mm*var(--lscale)); padding:calc(0.8mm*var(--lscale)) calc(1.5mm*var(--lscale)); border-top:max(0.1mm,calc(0.15mm*var(--lscale))) solid rgba(255,255,255,0.15); overflow:hidden; }
   .botbar .handle { margin-top:0; } .botbar .icons { margin-top:0; }
+
+  /* Modelos verticales (Botella al centro / Retrato completo) — texto arriba y abajo, botella llenando el medio */
+  .content.vertical { justify-content:flex-start; }
+  .imgmid { flex:none; height:44%; min-height:0; width:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; margin:calc(1mm*var(--lscale)) 0; }
+  .imgmid img { max-width:78%; max-height:100%; object-fit:contain; }
 
   .tplrow { display:flex; justify-content:space-between; align-items:center; padding:9px 10px; border:1px solid #eee; border-radius:9px; margin:6px 0; background:#fafafa; font-size:13px; }
   .tplname em { color:#999; font-style:normal; font-size:12px; }
@@ -162,13 +161,13 @@
 
       <div class="field" id="modelField" style="display:none;">
         <label>Estilo de etiqueta</label>
-        <select id="model" onchange="onControlChange()">
+        <select id="model" onchange="onModelChange()">
           <option value="clasico-negro">Clásico negro — botella y texto en fila</option>
           <option value="redes-verticales">Redes verticales — minimalista, iconos a la derecha</option>
-          <option value="marco-dorado">Marco dorado — con borde decorativo</option>
-          <option value="tres-columnas">Tres columnas — botella, texto y logo+redes separados</option>
-          <option value="logo-izquierda">Logo a la izquierda — logo+casa, texto, botella</option>
+          <option value="tres-columnas">Tres columnas — botella, texto y logo repetido</option>
           <option value="redes-abajo">Redes abajo — franja de redes a todo el ancho</option>
+          <option value="botella-centro">Botella al centro — vertical, para decants altos</option>
+          <option value="retrato-completo">Retrato completo — vertical, tamaño fijo</option>
         </select>
       </div>
 
