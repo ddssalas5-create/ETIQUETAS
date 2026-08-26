@@ -26,6 +26,30 @@ async function loadUsers(){
   if((r.data||[]).length===0) tb.innerHTML='<tr><td colspan="3">Aún no hay usuarios. Créalos en Supabase → Authentication → Users.</td></tr>';
 }
 
+async function crearUsuario(){
+  const email=$('nu_email').value.trim();
+  const pass=$('nu_pass').value;
+  const brand=$('nu_brand').value.trim();
+  const msg=$('nu_msg');
+  if(!email || !pass){ msg.textContent='Correo y contraseña son obligatorios.'; msg.style.color='#a33'; return; }
+  if(pass.length < 6){ msg.textContent='La contraseña debe tener al menos 6 caracteres.'; msg.style.color='#a33'; return; }
+  msg.textContent='Creando…'; msg.style.color='#888';
+  try{
+    const sess = await sb.auth.getSession();
+    const token = sess.data.session.access_token;
+    const resp = await fetch(window.CFG.url + '/functions/v1/create-user', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token },
+      body: JSON.stringify({ email:email, password:pass, brand_name:brand })
+    });
+    const out = await resp.json();
+    if(!resp.ok){ msg.textContent='Error: '+(out.error||resp.statusText); msg.style.color='#a33'; return; }
+    msg.textContent='Cliente creado ✓'; msg.style.color='#2a7';
+    $('nu_email').value=''; $('nu_pass').value=''; $('nu_brand').value='';
+    loadUsers();
+  }catch(e){ msg.textContent='Error: '+e; msg.style.color='#a33'; }
+}
+
 async function guardarMarca(id){
   const val = $('b_'+id).value.trim();
   const msg = $('m_'+id); msg.textContent='Guardando…'; msg.style.color='#888';

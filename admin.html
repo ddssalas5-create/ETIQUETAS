@@ -27,6 +27,9 @@
   td .save { background:#1a1a1a; color:#fff; border:none; padding:8px 12px; border-radius:7px; cursor:pointer; font-size:13px; }
   .rowmsg { font-size:12px; margin-left:6px; }
   .note { background:#fbf7ef; border:1px solid #efe3cf; border-radius:10px; padding:12px 14px; font-size:13px; color:#7a5c1e; margin-top:16px; line-height:1.6; }
+  .newuser { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+  .newuser input { padding:10px 11px; font-size:14px; border:1px solid #ccc; border-radius:8px; flex:1; min-width:160px; }
+  .newuser button { background:#1a1a1a; color:#fff; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; font-weight:600; }
 </style>
 </head>
 <body>
@@ -45,8 +48,18 @@
   <div id="admin">
     <div class="topbar"><div>Administrador: <b id="adminEmail"></b></div><button onclick="salir()">Salir</button></div>
     <div class="panel">
-      <h2>Usuarios</h2>
-      <p>Aquí ves todas las cuentas. Asigna el <b>nombre de marca</b> de cada cliente; ellos no lo pueden cambiar.</p>
+      <h2>Crear cliente nuevo</h2>
+      <p>Crea aquí mismo el acceso del cliente: correo, contraseña y el nombre de su marca (no lo podrá cambiar).</p>
+      <div class="newuser">
+        <input type="text" id="nu_email" placeholder="Correo del cliente">
+        <input type="text" id="nu_pass" placeholder="Contraseña">
+        <input type="text" id="nu_brand" placeholder="Nombre de la marca">
+        <button class="save" onclick="crearUsuario()">Crear cliente</button>
+      </div>
+      <div class="rowmsg" id="nu_msg" style="margin-top:8px;display:block;"></div>
+
+      <h2 style="margin-top:26px;">Usuarios</h2>
+      <p>Aquí ves todas las cuentas. Puedes actualizar el nombre de marca de cada cliente.</p>
       <table><thead><tr><th>Correo</th><th>Nombre de marca</th><th></th></tr></thead><tbody id="rows"></tbody></table>
       <div class="note">
         <b>¿Cómo doy acceso a un cliente nuevo?</b><br>

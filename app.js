@@ -1,6 +1,6 @@
 /* ================================================================
    Etiquetas DDS · App de clientes
-   Dos pestañas independientes: "clasico" y "negro"
+   Pestañas independientes (clasico / negro) + plantillas guardadas
    ================================================================ */
 
 const PALETTE = [
@@ -17,8 +17,8 @@ const TTP='M16.6 3c.29 2.02 1.55 3.53 3.9 3.75v2.63c-1.42.05-2.68-.34-3.9-1.06v6
 function TT(dark){ return '<svg viewBox="0 0 24 24"><path d="'+TTP+'" fill="#25F4EE" transform="translate(-0.8,-0.8)"/><path d="'+TTP+'" fill="#FE2C55" transform="translate(0.8,0.8)"/><path d="'+TTP+'" fill="'+(dark?'#eee':'#111')+'"/></svg>'; }
 
 const TOTAL = 50;
-
 let sb=null, user=null, brandName="TU MARCA", activeTab="clasico";
+let templates=[];
 
 function blank(){ return { nombre:"", casa:"", conc:"Eau de Parfum", img:null, logo:null }; }
 let sheets = {
@@ -26,8 +26,8 @@ let sheets = {
   negro:   { perfumes:[blank()], settings:{ bg:"#111111", accent:"#c2a24d", cBrand:"#c2a24d", cName:"#ffffff", cHouse:"#5b8bd0", cHandle:"#ffffff", conn:"", fit:"contain", handle:"@tu.usuario" } }
 };
 function S(){ return sheets[activeTab]; }
+function clone(x){ return JSON.parse(JSON.stringify(x)); }
 
-// ---------- utils ----------
 function esc(t){ return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function nameClass(n){ const l=(n||'').length; return l<=14?'s1':l<=22?'s2':'s3'; }
 function houseClass(n){ const l=(n||'').length; return l<=12?'h1':l<=18?'h2':'h3'; }
@@ -39,26 +39,14 @@ function compressImage(file, maxpx, cb){
   const rd=new FileReader();
   rd.onload=function(e){ const img=new Image();
     img.onload=function(){ let w=img.width,h=img.height; const s=Math.min(1,maxpx/Math.max(w,h)); w=Math.round(w*s); h=Math.round(h*s);
-      const c=document.createElement('canvas'); c.width=w; c.height=h; const ctx=c.getContext('2d');
-      // PNG para conservar transparencia (botellas/logos recortados)
-      ctx.drawImage(img,0,0,w,h); cb(c.toDataURL('image/png'));
-    }; img.src=e.target.result;
-  }; rd.readAsDataURL(file);
-}
-
-// ---------- marca de agua ----------
-function renderWatermark(){
-  const s=S(); const txt=(brandName||'DDS').toUpperCase();
-  const fill=isDark(s.settings.bg)?'rgba(255,255,255,0.13)':'rgba(0,0,0,0.10)';
-  const svg="<svg xmlns='http://www.w3.org/2000/svg' width='320' height='170'><text x='0' y='95' font-family='Arial' font-size='22' fill='"+fill+"' transform='rotate(-30 160 85)'>"+txt+"</text></svg>";
-  $('wm').style.backgroundImage="url(\"data:image/svg+xml;utf8,"+encodeURIComponent(svg)+"\")";
+      const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); cb(c.toDataURL('image/png')); };
+    img.src=e.target.result; }; rd.readAsDataURL(file);
 }
 
 // ---------- colores ----------
 function applyColors(){
   const s=S().settings, r=document.documentElement.style;
   r.setProperty('--bg', s.bg);
-  r.setProperty('--cut', isDark(s.bg)?'rgba(255,255,255,0.18)':'#ececec');
   r.setProperty('--accent', s.accent);
   r.setProperty('--c-brand', s.cBrand);
   r.setProperty('--c-name', s.cName);
@@ -69,14 +57,13 @@ function applyColors(){
 
 // ---------- editor ----------
 function renderEditor(){
-  const box=$('cards'); box.innerHTML='';
-  const negro = activeTab==='negro';
+  const box=$('cards'); box.innerHTML=''; const negro=activeTab==='negro';
   S().perfumes.forEach(function(p,i){
     const c=document.createElement('div'); c.className='card';
     var html=
       '<div class="grid2">'+
         '<input type="text" placeholder="Nombre del perfume" value="'+esc(p.nombre)+'" oninput="upd('+i+',\'nombre\',this.value)">'+
-        '<input type="text" placeholder="Casa / marca (ej: Jean Paul Gaultier)" value="'+esc(p.casa)+'" oninput="upd('+i+',\'casa\',this.value)">'+
+        '<input type="text" placeholder="Casa / marca" value="'+esc(p.casa)+'" oninput="upd('+i+',\'casa\',this.value)">'+
         '<input class="full" type="text" placeholder="Concentración (opcional)" value="'+esc(p.conc)+'" oninput="upd('+i+',\'conc\',this.value)">'+
       '</div>'+
       '<div class="imgrow">'+
@@ -84,15 +71,13 @@ function renderEditor(){
         '<input type="file" accept="image/*" onchange="onImg(this,'+i+')">'+
         (p.img?'<button class="mini" onclick="quitarImg('+i+')">Quitar imagen</button>':'')+
       '</div>'+
-      '<div class="subhint">Sube la foto de la botella (ideal: recortada, fondo transparente).</div>';
+      '<div class="subhint">Foto de la botella (ideal: recortada, fondo transparente).</div>';
     if(negro){
-      html+=
-      '<div class="imgrow">'+
+      html+='<div class="imgrow">'+
         (p.logo?'<img class="thumb" src="'+p.logo+'">':'<span class="hint">Sin logo</span>')+
         '<input type="file" accept="image/*" onchange="onLogo(this,'+i+')">'+
         (p.logo?'<button class="mini" onclick="quitarLogo('+i+')">Quitar logo</button>':'')+
-      '</div>'+
-      '<div class="subhint">Logo de la casa/marca (aparece debajo del nombre, encima de las redes).</div>';
+      '</div><div class="subhint">Logo de la casa/marca (debajo del nombre).</div>';
     }
     html+='<div class="actions"><button class="mini del" onclick="delPerfume('+i+')">Eliminar perfume</button></div>';
     c.innerHTML=html; box.appendChild(c);
@@ -109,12 +94,8 @@ function onLogo(inp,i){ const f=inp.files[0]; if(!f) return; compressImage(f,400
 // ---------- controles ----------
 function readControls(){
   const s=S().settings;
-  s.handle=$('handle').value.trim();
-  s.conn=$('conn').value.trim();
-  s.fit=$('fit').value;
-  s.bg=$('bg').value;
-  s.accent=$('accent').value;
-  s.cBrand=$('cBrand').value; s.cName=$('cName').value; s.cHouse=$('cHouse').value; s.cHandle=$('cHandle').value;
+  s.handle=$('handle').value.trim(); s.conn=$('conn').value.trim(); s.fit=$('fit').value; s.bg=$('bg').value;
+  s.accent=$('accent').value; s.cBrand=$('cBrand').value; s.cName=$('cName').value; s.cHouse=$('cHouse').value; s.cHandle=$('cHandle').value;
 }
 function onControlChange(){ readControls(); applyColors(); renderSheet(); }
 function onBgChange(){
@@ -125,7 +106,7 @@ function onBgChange(){
   fillControls(); applyColors(); renderSheet();
 }
 
-// ---------- render de etiquetas ----------
+// ---------- etiquetas ----------
 function labelClasico(it,s,social){
   const conn=s.conn;
   return '<div class="content">'+
@@ -152,20 +133,64 @@ function labelNegro(it,s,social){
 function renderSheet(){
   const s=S().settings;
   const list=S().perfumes.filter(function(p){return (p.nombre||'').trim()!=='';});
-  const grid=$('grid'); grid.innerHTML=''; renderWatermark();
+  const grid=$('grid'); grid.innerHTML='';
   if(list.length===0) return;
   const modo=document.querySelector('input[name=modo]:checked').value;
   const social='<div class="handle">'+esc(s.handle)+'</div><div class="icons">'+FB+IG+TT(isDark(s.bg))+'</div>';
   for(let k=0;k<TOTAL;k++){
     const it=modo==='uno'?list[0]:list[k%list.length];
-    const el=document.createElement('div');
-    el.className='label '+activeTab+(it.img?' has-img':'');
+    const el=document.createElement('div'); el.className='label '+activeTab+(it.img?' has-img':'');
     el.innerHTML = activeTab==='negro' ? labelNegro(it,s,social) : labelClasico(it,s,social);
     grid.appendChild(el);
   }
 }
 
-// ---------- pintar controles + pestañas ----------
+// ---------- plantillas ----------
+function renderTemplates(){
+  const box=$('tplList'); if(!box) return; box.innerHTML='';
+  if(templates.length===0){ box.innerHTML='<div class="hint" style="margin-top:6px;">Aún no tienes plantillas guardadas.</div>'; return; }
+  templates.forEach(function(t){
+    const d=document.createElement('div'); d.className='tplrow';
+    const tipo = t.tab==='negro' ? 'Fondo negro' : 'Texto clásico';
+    d.innerHTML='<span class="tplname">'+esc(t.name)+' <em>· '+tipo+'</em></span>'+
+      '<span><button class="mini" onclick="cargarPlantilla(\''+t.id+'\')">Cargar</button> '+
+      '<button class="mini del" onclick="eliminarPlantilla(\''+t.id+'\')">Eliminar</button></span>';
+    box.appendChild(d);
+  });
+}
+function snapshot(nombre){
+  return { id:String(Date.now())+Math.floor(Math.random()*999), name:nombre, tab:activeTab,
+           perfumes:clone(S().perfumes), settings:clone(S().settings) };
+}
+function guardarPlantilla(){
+  readControls();
+  var nombre=$('tplName').value.trim();
+  if(!nombre) nombre=prompt('Ponle un nombre a esta plantilla:','Mi plantilla');
+  if(!nombre) return;
+  templates.push(snapshot(nombre)); $('tplName').value=''; renderTemplates(); guardar();
+}
+function cargarPlantilla(id){
+  const t=templates.find(function(x){return x.id===id;}); if(!t) return;
+  activeTab=t.tab; sheets[t.tab].perfumes=clone(t.perfumes); sheets[t.tab].settings=clone(t.settings);
+  fillControls(); applyColors(); renderEditor(); renderSheet();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function eliminarPlantilla(id){
+  if(!confirm('¿Eliminar esta plantilla?')) return;
+  templates=templates.filter(function(x){return x.id!==id;}); renderTemplates(); guardar();
+}
+
+// ---------- imprimir (ofrece guardar) ----------
+function imprimir(){
+  readControls();
+  if(confirm('¿Quieres guardar esta hoja como plantilla para reimprimirla después?')){
+    var nombre=$('tplName').value.trim() || prompt('Nombre de la plantilla:','Mi plantilla');
+    if(nombre){ templates.push(snapshot(nombre)); $('tplName').value=''; renderTemplates(); guardar(); }
+  }
+  window.print();
+}
+
+// ---------- controles + pestañas ----------
 function fillControls(){
   const s=S().settings;
   $('handle').value=s.handle; $('conn').value=s.conn; $('fit').value=s.fit;
@@ -188,32 +213,34 @@ async function loadData(){
   const d=res.data;
   if(d){
     brandName = d.brand_name && d.brand_name.trim() ? d.brand_name : brandName;
-    if(d.data && d.data.sheets){
-      ['clasico','negro'].forEach(function(t){
-        if(d.data.sheets[t]){
-          sheets[t].settings=Object.assign(sheets[t].settings,d.data.sheets[t].settings||{});
-          if(Array.isArray(d.data.sheets[t].perfumes)&&d.data.sheets[t].perfumes.length) sheets[t].perfumes=d.data.sheets[t].perfumes;
-        }
-      });
-    } else if(d.data && d.data.settings){ // compatibilidad con versión anterior
-      sheets.clasico.settings=Object.assign(sheets.clasico.settings,d.data.settings);
-      if(Array.isArray(d.data.perfumes)&&d.data.perfumes.length) sheets.clasico.perfumes=d.data.perfumes;
+    if(d.data){
+      if(Array.isArray(d.data.templates)) templates=d.data.templates;
+      if(d.data.sheets){
+        ['clasico','negro'].forEach(function(t){
+          if(d.data.sheets[t]){
+            sheets[t].settings=Object.assign(sheets[t].settings,d.data.sheets[t].settings||{});
+            if(Array.isArray(d.data.sheets[t].perfumes)&&d.data.sheets[t].perfumes.length) sheets[t].perfumes=d.data.sheets[t].perfumes;
+          }
+        });
+      } else if(d.data.settings){
+        sheets.clasico.settings=Object.assign(sheets.clasico.settings,d.data.settings);
+        if(Array.isArray(d.data.perfumes)&&d.data.perfumes.length) sheets.clasico.perfumes=d.data.perfumes;
+      }
     }
   }
 }
 async function guardar(){
   readControls();
-  const btn=$('saveBtn'), prev=btn.textContent; btn.textContent='Guardando…'; btn.disabled=true;
-  const res=await sb.from('profiles').upsert({id:user.id, data:{sheets:sheets}, updated_at:new Date().toISOString()});
-  btn.disabled=false; btn.textContent=prev;
+  const btn=$('saveBtn'), prev=btn?btn.textContent:''; if(btn){ btn.textContent='Guardando…'; btn.disabled=true; }
+  const res=await sb.from('profiles').upsert({id:user.id, data:{sheets:sheets, templates:templates}, updated_at:new Date().toISOString()});
+  if(btn){ btn.disabled=false; btn.textContent=prev; }
   const m=$('saveMsg');
-  if(res.error){ m.textContent='Error: '+res.error.message; m.style.color='#a33'; }
-  else { m.textContent='Guardado ✓'; m.style.color='#2a7'; setTimeout(function(){m.textContent='';},2500); }
+  if(m){ if(res.error){ m.textContent='Error: '+res.error.message; m.style.color='#a33'; } else { m.textContent='Guardado ✓'; m.style.color='#2a7'; setTimeout(function(){m.textContent='';},2500); } }
 }
 
 // ---------- sesión ----------
 function showLogin(){ $('login').style.display='flex'; $('app').style.display='none'; }
-function showApp(){ $('login').style.display='none'; $('app').style.display='block'; fillControls(); applyColors(); renderEditor(); renderSheet(); }
+function showApp(){ $('login').style.display='none'; $('app').style.display='block'; fillControls(); applyColors(); renderEditor(); renderSheet(); renderTemplates(); }
 async function entrar(){
   const email=$('email').value.trim(), pass=$('password').value, err=$('loginErr'); err.textContent='';
   if(!sb){ err.textContent='Falta configurar config.js.'; return; }
