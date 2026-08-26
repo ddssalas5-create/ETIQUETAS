@@ -23,9 +23,10 @@ let templates=[];
 let curCols=5, curRows=10; // se recalculan en computeGrid()
 
 function blank(){ return { nombre:"", casa:"", conc:"Eau de Parfum", img:null, logo:null }; }
+const LW_MIN=4.0, LW_MAX=4.5, LH_MIN=2.0, LH_MAX=5.0; // rango permitido para etiquetas de decants
 function defaultSettings(neg){
   return neg
-    ? { bg:"#000000", accent:"#c2a24d", cBrand:"#c2a24d", cName:"#ffffff", cHouse:"#5b8bd0", cHandle:"#ffffff", conn:"", fit:"contain", handle:"@tu.usuario",
+    ? { bg:"#000000", accent:"#c2a24d", cBrand:"#c2a24d", cName:"#ffffff", cHouse:"#5b8bd0", cHandle:"#ffffff", conn:"", fit:"contain", handle:"@tu.usuario", model:"clasico-negro",
         sheetSize:"A4", lw:4.0, lh:2.7, cols:5, rows:10 }
     : { bg:"#ffffff", accent:"#6e1f2a", cBrand:"#6e1f2a", cName:"#111111", cHouse:"#111111", cHandle:"#111111", conn:"Tipo", fit:"cover", handle:"@tu.usuario",
         sheetSize:"A4", lw:4.0, lh:2.7, cols:5, rows:10 };
@@ -66,8 +67,8 @@ function applyColors(){
 function computeGrid(){
   const s=S().settings;
   const page = PAGE_SIZES[s.sheetSize] || PAGE_SIZES.A4;
-  const lwCm = Math.max(2, Number(s.lw)||4.0);
-  const lhCm = Math.max(1.5, Number(s.lh)||2.7);
+  const lwCm = Math.min(LW_MAX, Math.max(LW_MIN, Number(s.lw)||4.0));
+  const lhCm = Math.min(LH_MAX, Math.max(LH_MIN, Number(s.lh)||2.7));
   const lw = lwCm*10, lh = lhCm*10; // cm -> mm para las medidas de la hoja
   const maxCols = Math.max(1, Math.floor((page.w - 2*MIN_MARGIN) / lw));
   const maxRows = Math.max(1, Math.floor((page.h - 2*MIN_MARGIN) / lh));
@@ -108,11 +109,10 @@ function renderEditor(){
   const box=$('cards'); box.innerHTML=''; const negro=activeTab==='negro';
   S().perfumes.forEach(function(p,i){
     const c=document.createElement('div'); c.className='card';
-    var html=
-      '<div class="grid2">'+
+    var html='<div class="grid2">'+
         '<input type="text" placeholder="Nombre del perfume" value="'+esc(p.nombre)+'" oninput="upd('+i+',\'nombre\',this.value)">'+
         '<input type="text" placeholder="Casa / marca" value="'+esc(p.casa)+'" oninput="upd('+i+',\'casa\',this.value)">'+
-        '<input class="full" type="text" placeholder="Concentración (opcional)" value="'+esc(p.conc)+'" oninput="upd('+i+',\'conc\',this.value)">'+
+        (negro?'':'<input class="full" type="text" placeholder="Concentración (opcional)" value="'+esc(p.conc)+'" oninput="upd('+i+',\'conc\',this.value)">')+
       '</div>'+
       '<div class="imgrow">'+
         (p.img?'<img class="thumb" src="'+p.img+'">':'<span class="hint">Sin imagen</span>')+
@@ -125,7 +125,7 @@ function renderEditor(){
         (p.logo?'<img class="thumb" src="'+p.logo+'">':'<span class="hint">Sin logo</span>')+
         '<input type="file" accept="image/*" onchange="onLogo(this,'+i+')">'+
         (p.logo?'<button class="mini" onclick="quitarLogo('+i+')">Quitar logo</button>':'')+
-      '</div><div class="subhint">Logo de la casa/marca (debajo del nombre). Si pones logo, puedes dejar vacío el texto de casa para no repetir.</div>';
+      '</div><div class="subhint">Logo de la casa/marca (aparece debajo del nombre, encima de las redes).</div>';
     }
     html+='<div class="actions"><button class="mini del" onclick="delPerfume('+i+')">Eliminar perfume</button></div>';
     c.innerHTML=html; box.appendChild(c);
@@ -146,6 +146,7 @@ function readControls(){
   s.accent=$('accent').value; s.cBrand=$('cBrand').value; s.cName=$('cName').value; s.cHouse=$('cHouse').value; s.cHandle=$('cHandle').value;
   s.sheetSize=$('sheetSize').value; s.lw=parseFloat($('lw').value)||s.lw; s.lh=parseFloat($('lh').value)||s.lh;
   s.cols=parseInt($('cols').value)||s.cols; s.rows=parseInt($('rows').value)||s.rows;
+  if(activeTab==='negro') s.model=$('model').value;
 }
 function onControlChange(){ readControls(); applyColors(); renderSheet(); }
 function onBgChange(){
@@ -159,26 +160,97 @@ function onBgChange(){
 // ---------- etiquetas ----------
 function labelClasico(it,s,social){
   const conn=s.conn;
-  return '<div class="content">'+
+  return '<div class="content fitbox">'+
       '<div class="brand">'+esc(brandName)+'</div>'+
-      '<div class="name '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
+      '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
       '<div class="sep"></div>'+
-      (it.casa?'<div class="opt-house">'+(conn?'<div class="insplbl">'+esc(conn)+'</div>':'')+'<div class="house '+houseClass(it.casa)+'">'+esc(it.casa)+'</div></div>':'')+
+      (it.casa?'<div class="opt-house">'+(conn?'<div class="insplbl">'+esc(conn)+'</div>':'')+'<div class="house fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div></div>':'')+
       (it.conc?'<div class="opt-conc conc">'+esc(it.conc)+'</div>':'')+
       (s.handle?'<div class="opt-social">'+social+'</div>':'')+
     '</div>'+
     (it.img?'<div class="imgbox '+(s.fit==='contain'?'fit-contain':'')+'"><img src="'+it.img+'"></div>':'');
 }
+// ---- Modelos de etiqueta "fondo negro" ----
 function labelNegro(it,s,social){
+  if(s.model==='redes-verticales') return labelNegroVSocial(it,s);
+  if(s.model==='marco-dorado') return labelNegroFramed(it,s,social);
+  if(s.model==='tres-columnas') return labelNegroTresCol(it,s,social);
+  if(s.model==='logo-izquierda') return labelNegroLogoLeft(it,s,social);
+  if(s.model==='redes-abajo') return labelNegroRedesAbajo(it,s,social);
+  return labelNegroClasico(it,s,social);
+}
+// Modelo 1 — Clásico negro: botella izquierda, texto derecha, logo grande (sin concentración)
+function labelNegroClasico(it,s,social){
   return (it.img?'<div class="imgbox left fit-contain"><img src="'+it.img+'"></div>':'')+
-    '<div class="content">'+
+    '<div class="content fitbox">'+
       '<div class="brand">'+esc(brandName)+'</div>'+
-      '<div class="name '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
-      (it.casa?'<div class="opt-house casa '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'')+
-      (it.logo?'<div class="opt-logo logowrap"><img class="logoimg" src="'+it.logo+'"></div>':'')+
-      (it.conc?'<div class="opt-conc conc">'+esc(it.conc)+'</div>':'')+
+      '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
+      (it.casa?'<div class="opt-house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'')+
+      (it.logo?'<div class="opt-logo logowrap big"><img class="logoimg" src="'+it.logo+'"></div>':'')+
       (s.handle?'<div class="opt-social">'+social+'</div>':'')+
     '</div>';
+}
+// Modelo 2 — Redes verticales: botella izquierda, solo marca+nombre+logo al centro, iconos apilados a la derecha
+function labelNegroVSocial(it,s){
+  const icons='<div class="vicons fitbox">'+FB+IG+TT(true)+'</div>';
+  return (it.img?'<div class="imgbox left fit-contain"><img src="'+it.img+'"></div>':'')+
+    '<div class="content fitbox">'+
+      '<div class="brand">'+esc(brandName)+'</div>'+
+      '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
+      (it.logo?'<div class="opt-logo logowrap big"><img class="logoimg" src="'+it.logo+'"></div>':(it.casa?'<div class="opt-house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':''))+
+    '</div>'+
+    (s.handle?icons:'');
+}
+// Modelo 3 — Marco dorado: como el clásico, con un marco decorativo alrededor de toda la etiqueta
+function labelNegroFramed(it,s,social){
+  return '<div class="frame"></div>'+
+    (it.img?'<div class="imgbox left fit-contain"><img src="'+it.img+'"></div>':'')+
+    '<div class="content fitbox">'+
+      '<div class="brand">'+esc(brandName)+'</div>'+
+      '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
+      (it.casa?'<div class="opt-house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'')+
+      (it.logo?'<div class="opt-logo logowrap big"><img class="logoimg" src="'+it.logo+'"></div>':'')+
+      (s.handle?'<div class="opt-social">'+social+'</div>':'')+
+    '</div>';
+}
+// Modelo 4 — Tres columnas: botella | nombre+casa | (línea) logo grande + redes, en su propia columna
+function labelNegroTresCol(it,s,social){
+  return (it.img?'<div class="imgbox left fit-contain"><img src="'+it.img+'"></div>':'')+
+    '<div class="content fitbox">'+
+      '<div class="brand">'+esc(brandName)+'</div>'+
+      '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
+      (it.casa?'<div class="opt-house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'')+
+    '</div>'+
+    '<div class="sidecol fitbox">'+
+      (it.logo?'<div class="opt-logo logowrap"><img class="logoimg" src="'+it.logo+'"></div>':'')+
+      (s.handle?'<div class="opt-social">'+social+'</div>':'')+
+    '</div>';
+}
+// Modelo 5 — Logo protagonista: logo+casa a la izquierda | nombre+marca centro | botella a la derecha
+function labelNegroLogoLeft(it,s,social){
+  return '<div class="sidecol right-divider fitbox">'+
+      (it.logo?'<div class="opt-logo logowrap"><img class="logoimg" src="'+it.logo+'"></div>':'')+
+      (it.casa?'<div class="opt-house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'')+
+    '</div>'+
+    '<div class="content fitbox">'+
+      '<div class="brand">'+esc(brandName)+'</div>'+
+      '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
+      (s.handle?'<div class="opt-social">'+social+'</div>':'')+
+    '</div>'+
+    (it.img?'<div class="imgbox right fit-contain"><img src="'+it.img+'"></div>':'');
+}
+// Modelo 6 — Redes abajo: botella + texto arriba, franja de redes a todo el ancho abajo
+function labelNegroRedesAbajo(it,s,social){
+  return '<div class="toprow">'+
+      (it.img?'<div class="imgbox left fit-contain"><img src="'+it.img+'"></div>':'')+
+      '<div class="content fitbox">'+
+        '<div class="brand">'+esc(brandName)+'</div>'+
+        '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
+        (it.casa?'<div class="opt-house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'')+
+        (it.logo?'<div class="opt-logo logowrap"><img class="logoimg" src="'+it.logo+'"></div>':'')+
+      '</div>'+
+    '</div>'+
+    (s.handle?'<div class="botbar opt-social fitbox">'+social+'</div>':'');
 }
 function renderSheet(){
   const s=S().settings;
@@ -191,7 +263,8 @@ function renderSheet(){
   for(let k=0;k<total;k++){
     const idx = modo==='uno'?0:(k%list.length);
     const it=list[idx];
-    const el=document.createElement('div'); el.className='label '+activeTab+(it.img?' has-img':'');
+    const modelClass = activeTab==='negro' ? (' model-'+(s.model||'clasico-negro')) : '';
+    const el=document.createElement('div'); el.className='label '+activeTab+modelClass+(it.img?' has-img':'');
     el.dataset.itemIdx=idx;
     el.innerHTML = activeTab==='negro' ? labelNegro(it,s,social) : labelClasico(it,s,social);
     grid.appendChild(el);
@@ -202,12 +275,16 @@ function renderSheet(){
 
 // Prioridad de qué se oculta primero si de plano no entra todo (lo menos esencial primero)
 const DROP_ORDER = ['.opt-social', '.opt-conc', '.opt-logo', '.opt-house'];
-const SCALE_MIN = 0.4, SCALE_MAX = 2.6, READABLE_FLOOR = 0.75; // por debajo de 0.75 preferimos ocultar campos antes que encoger más
+const SCALE_MIN = 0.4, SCALE_MAX = 2.6, READABLE_FLOOR = 0.68; // por debajo de este umbral preferimos ocultar campos antes que encoger más
 
 function labelFits(labelEl, scale){
-  const c = labelEl.querySelector('.content');
   labelEl.style.setProperty('--lscale', scale.toFixed(3));
-  return (c.scrollHeight <= c.clientHeight + 0.5) && (c.scrollWidth <= c.clientWidth + 0.5);
+  const boxes = labelEl.querySelectorAll('.fitbox');
+  for(let i=0;i<boxes.length;i++){
+    const c=boxes[i];
+    if(c.scrollHeight > c.clientHeight + 0.5 || c.scrollWidth > c.clientWidth + 0.5) return false;
+  }
+  return true;
 }
 function bestScale(labelEl, lo){
   if(!labelFits(labelEl, lo)) return null;
@@ -220,19 +297,33 @@ function bestScale(labelEl, lo){
   return a;
 }
 // Ajusta UNA etiqueta representativa: agranda al máximo que quepa manteniéndose legible; si ni al
-// tamaño mínimo legible entra, oculta primero lo menos esencial (redes → concentración → logo → casa)
-// hasta que quepa cómodo. Solo como último recurso permite bajar del umbral legible, para nunca cortar texto.
+// tamaño mínimo legible entra, oculta —solo dentro de la columna que realmente se desborda— primero
+// lo menos esencial (redes → concentración → logo → casa) hasta que quepa cómodo.
 function autofitOne(labelEl){
   DROP_ORDER.forEach(function(sel){ labelEl.querySelectorAll(sel).forEach(function(e){ e.style.display=''; }); });
   let scale = bestScale(labelEl, READABLE_FLOOR);
-  let step = 0;
-  while(scale===null && step < DROP_ORDER.length){
-    labelEl.querySelectorAll(DROP_ORDER[step]).forEach(function(e){ e.style.display='none'; });
-    step++;
+  const hiddenSet = new Set();
+  let guard = 0;
+  while(scale===null && guard<8){
+    labelFits(labelEl, READABLE_FLOOR);
+    const bad = Array.from(labelEl.querySelectorAll('.fitbox')).filter(function(c){
+      return c.scrollHeight > c.clientHeight+0.5 || c.scrollWidth > c.clientWidth+0.5;
+    });
+    if(bad.length===0) break;
+    let dropped=false;
+    for(let i=0;i<DROP_ORDER.length && !dropped;i++){
+      const sel=DROP_ORDER[i];
+      for(let j=0;j<bad.length;j++){
+        const el = bad[j].querySelector(sel);
+        if(el && el.style.display!=='none'){ el.style.display='none'; hiddenSet.add(sel); dropped=true; }
+      }
+    }
+    if(!dropped) break;
+    guard++;
     scale = bestScale(labelEl, READABLE_FLOOR);
   }
   if(scale===null){ scale = bestScale(labelEl, SCALE_MIN); if(scale===null){ labelFits(labelEl, SCALE_MIN); scale=SCALE_MIN; } }
-  return { scale: scale, hiddenSteps: step };
+  return { scale: scale, hidden: hiddenSet };
 }
 function autofitLabels(){
   const labels = Array.from(document.querySelectorAll('#grid .label'));
@@ -243,8 +334,8 @@ function autofitLabels(){
     const result = autofitOne(group[0]); // mide/ajusta solo la primera; el resto son idénticas
     for(let i=1;i<group.length;i++){
       group[i].style.setProperty('--lscale', result.scale.toFixed(3));
-      DROP_ORDER.forEach(function(sel,si){
-        group[i].querySelectorAll(sel).forEach(function(e){ e.style.display = si<result.hiddenSteps ? 'none' : ''; });
+      DROP_ORDER.forEach(function(sel){
+        group[i].querySelectorAll(sel).forEach(function(e){ e.style.display = result.hidden.has(sel) ? 'none' : ''; });
       });
     }
   });
@@ -327,6 +418,11 @@ function fillControls(){
   $('sheetSize').value=s.sheetSize; $('lw').value=s.lw; $('lh').value=s.lh; $('cols').value=s.cols; $('rows').value=s.rows;
   $('tiendaLabel').textContent=brandName;
   $('connField').style.display = activeTab==='negro' ? 'none' : 'block';
+  const modelField=$('modelField');
+  if(modelField){
+    modelField.style.display = activeTab==='negro' ? 'block' : 'none';
+    if(activeTab==='negro') $('model').value = s.model||'clasico-negro';
+  }
   document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.tab===activeTab); });
 }
 function setTab(t){ readControls(); activeTab=t; fillControls(); applyColors(); renderEditor(); renderSheet(); }
