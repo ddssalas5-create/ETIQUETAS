@@ -83,10 +83,6 @@ function computeGrid(){
   s.cols=cols; s.rows=rows; s.lw=lwCm; s.lh=lhCm;
   curCols=cols; curRows=rows;
 
-  // Escala proporcional: texto, imagen, logo e iconos crecen/disminuyen junto con el tamaño de etiqueta
-  const scale = Math.min(2.6, Math.max(0.45, Math.min(lwCm/BASE_LW, lhCm/BASE_LH)));
-  document.documentElement.style.setProperty('--lscale', scale.toFixed(3));
-
   const page_el=$('page'); const grid=$('grid');
   page_el.style.width = page.w+'mm'; page_el.style.height = page.h+'mm';
   const padH = Math.max(MIN_MARGIN, (page.w - cols*lw)/2);
@@ -167,9 +163,9 @@ function labelClasico(it,s,social){
       '<div class="brand">'+esc(brandName)+'</div>'+
       '<div class="name '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
       '<div class="sep"></div>'+
-      (it.casa?(conn?'<div class="insplbl">'+esc(conn)+'</div>':'')+'<div class="house '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'')+
-      (it.conc?'<div class="conc">'+esc(it.conc)+'</div>':'')+
-      (s.handle?social:'')+
+      (it.casa?'<div class="opt-house">'+(conn?'<div class="insplbl">'+esc(conn)+'</div>':'')+'<div class="house '+houseClass(it.casa)+'">'+esc(it.casa)+'</div></div>':'')+
+      (it.conc?'<div class="opt-conc conc">'+esc(it.conc)+'</div>':'')+
+      (s.handle?'<div class="opt-social">'+social+'</div>':'')+
     '</div>'+
     (it.img?'<div class="imgbox '+(s.fit==='contain'?'fit-contain':'')+'"><img src="'+it.img+'"></div>':'');
 }
@@ -178,10 +174,10 @@ function labelNegro(it,s,social){
     '<div class="content">'+
       '<div class="brand">'+esc(brandName)+'</div>'+
       '<div class="name '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
-      (it.casa?'<div class="casa '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'')+
-      (it.logo?'<div class="logowrap"><img class="logoimg" src="'+it.logo+'"></div>':'')+
-      (it.conc?'<div class="conc">'+esc(it.conc)+'</div>':'')+
-      (s.handle?social:'')+
+      (it.casa?'<div class="opt-house casa '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'')+
+      (it.logo?'<div class="opt-logo logowrap"><img class="logoimg" src="'+it.logo+'"></div>':'')+
+      (it.conc?'<div class="opt-conc conc">'+esc(it.conc)+'</div>':'')+
+      (s.handle?'<div class="opt-social">'+social+'</div>':'')+
     '</div>';
 }
 function renderSheet(){
@@ -193,24 +189,63 @@ function renderSheet(){
   const modo=document.querySelector('input[name=modo]:checked').value;
   const social='<div class="handle">'+esc(s.handle)+'</div><div class="icons">'+FB+IG+TT(isDark(s.bg))+'</div>';
   for(let k=0;k<total;k++){
-    const it=modo==='uno'?list[0]:list[k%list.length];
+    const idx = modo==='uno'?0:(k%list.length);
+    const it=list[idx];
     const el=document.createElement('div'); el.className='label '+activeTab+(it.img?' has-img':'');
+    el.dataset.itemIdx=idx;
     el.innerHTML = activeTab==='negro' ? labelNegro(it,s,social) : labelClasico(it,s,social);
     grid.appendChild(el);
   }
-  requestAnimationFrame(fitContents);
-  setTimeout(fitContents, 120); // segunda pasada por si alguna imagen tarda en decodificar
+  requestAnimationFrame(autofitLabels);
+  setTimeout(autofitLabels, 150); // segunda pasada por si alguna imagen tarda en decodificar
 }
 
-// Encoge el contenido de cada etiqueta si no entra, para que nunca se tape texto
-function fitContents(){
-  document.querySelectorAll('#grid .label .content').forEach(function(c){
-    c.style.transform='none';
-    const avail=c.clientHeight, need=c.scrollHeight;
-    if(avail>0 && need>avail){
-      const scale=Math.max(0.5,(avail/need)*0.96);
-      c.style.transform='scale('+scale.toFixed(3)+')';
-      c.style.transformOrigin='center center';
+// Prioridad de qué se oculta primero si de plano no entra todo (lo menos esencial primero)
+const DROP_ORDER = ['.opt-social', '.opt-conc', '.opt-logo', '.opt-house'];
+const SCALE_MIN = 0.4, SCALE_MAX = 2.6, READABLE_FLOOR = 0.75; // por debajo de 0.75 preferimos ocultar campos antes que encoger más
+
+function labelFits(labelEl, scale){
+  const c = labelEl.querySelector('.content');
+  labelEl.style.setProperty('--lscale', scale.toFixed(3));
+  return (c.scrollHeight <= c.clientHeight + 0.5) && (c.scrollWidth <= c.clientWidth + 0.5);
+}
+function bestScale(labelEl, lo){
+  if(!labelFits(labelEl, lo)) return null;
+  let a=lo, b=SCALE_MAX;
+  for(let i=0;i<9;i++){
+    const mid=(a+b)/2;
+    if(labelFits(labelEl, mid)) a=mid; else b=mid;
+  }
+  labelFits(labelEl, a);
+  return a;
+}
+// Ajusta UNA etiqueta representativa: agranda al máximo que quepa manteniéndose legible; si ni al
+// tamaño mínimo legible entra, oculta primero lo menos esencial (redes → concentración → logo → casa)
+// hasta que quepa cómodo. Solo como último recurso permite bajar del umbral legible, para nunca cortar texto.
+function autofitOne(labelEl){
+  DROP_ORDER.forEach(function(sel){ labelEl.querySelectorAll(sel).forEach(function(e){ e.style.display=''; }); });
+  let scale = bestScale(labelEl, READABLE_FLOOR);
+  let step = 0;
+  while(scale===null && step < DROP_ORDER.length){
+    labelEl.querySelectorAll(DROP_ORDER[step]).forEach(function(e){ e.style.display='none'; });
+    step++;
+    scale = bestScale(labelEl, READABLE_FLOOR);
+  }
+  if(scale===null){ scale = bestScale(labelEl, SCALE_MIN); if(scale===null){ labelFits(labelEl, SCALE_MIN); scale=SCALE_MIN; } }
+  return { scale: scale, hiddenSteps: step };
+}
+function autofitLabels(){
+  const labels = Array.from(document.querySelectorAll('#grid .label'));
+  const byItem = {};
+  labels.forEach(function(l){ (byItem[l.dataset.itemIdx] = byItem[l.dataset.itemIdx]||[]).push(l); });
+  Object.keys(byItem).forEach(function(idx){
+    const group = byItem[idx];
+    const result = autofitOne(group[0]); // mide/ajusta solo la primera; el resto son idénticas
+    for(let i=1;i<group.length;i++){
+      group[i].style.setProperty('--lscale', result.scale.toFixed(3));
+      DROP_ORDER.forEach(function(sel,si){
+        group[i].querySelectorAll(sel).forEach(function(e){ e.style.display = si<result.hiddenSteps ? 'none' : ''; });
+      });
     }
   });
 }
