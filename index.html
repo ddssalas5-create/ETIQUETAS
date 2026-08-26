@@ -63,12 +63,12 @@
   .grid { display:grid; }
 
   .label { position:relative; background:var(--bg); border:0.12mm solid var(--cut); display:flex; flex-direction:row; align-items:stretch; overflow:hidden; }
-  .content { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:calc(1.6mm*var(--lscale)) calc(1.8mm*var(--lscale)); overflow:hidden; }
+  .content { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:space-evenly; text-align:center; padding:calc(1.6mm*var(--lscale)) calc(1.8mm*var(--lscale)); overflow:hidden; }
   .content > * { flex-shrink:0; }
-  .imgbox { width:calc(15mm*var(--lscale)); height:100%; display:flex; align-items:center; justify-content:center; padding:calc(0.5mm*var(--lscale)); }
+  .imgbox { width:34%; height:100%; display:flex; align-items:center; justify-content:center; padding:calc(0.5mm*var(--lscale)); }
   .imgbox img { width:100%; height:100%; object-fit:cover; }
   .imgbox.fit-contain img { object-fit:contain; }
-  .label.negro .imgbox.left { width:calc(17mm*var(--lscale)); }
+  .label.negro .imgbox.left { width:40%; }
 
   .brand { font-family:Arial,Helvetica,sans-serif; font-size:calc(4.6pt*var(--lscale)); letter-spacing:calc(1.6pt*var(--lscale)); text-transform:uppercase; color:var(--c-brand); font-weight:700; white-space:nowrap; }
   .name { font-family:Georgia,'Times New Roman',serif; line-height:1.03; color:var(--c-name); letter-spacing:calc(.2pt*var(--lscale)); margin-top:calc(1mm*var(--lscale)); max-width:100%; max-height:calc(8.5mm*var(--lscale)); overflow:hidden; }
