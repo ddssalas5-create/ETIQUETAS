@@ -58,13 +58,13 @@
   button.ghost { background:#fff; color:#1a1a1a; border:1px solid #ccc; padding:12px 22px; font-size:14px; border-radius:9px; cursor:pointer; font-weight:600; }
   button:hover { opacity:.92; } #saveMsg { font-size:13px; margin-left:6px; }
 
-  /* HOJA A4 (5 x 10) */
-  .page { position:relative; width:210mm; height:297mm; padding:13.5mm 5mm; margin:20px auto; background:#fff; box-shadow:0 3px 16px rgba(0,0,0,.14); }
-  .grid { display:grid; grid-template-columns:repeat(5,40mm); grid-template-rows:repeat(10,27mm); }
-  .wm { position:absolute; inset:0; z-index:5; pointer-events:none; background-repeat:repeat; }
+  /* HOJA (tamaño y grilla se fijan por JS via estilos inline, segun ajustes del usuario) */
+  .page { position:relative; width:210mm; height:297mm; margin:20px auto; background:#fff; box-shadow:0 3px 16px rgba(0,0,0,.14); }
+  .grid { display:grid; }
 
-  .label { position:relative; width:40mm; height:27mm; background:var(--bg); border:0.12mm solid var(--cut); display:flex; flex-direction:row; align-items:stretch; overflow:hidden; }
-  .content { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:1.8mm 2mm; }
+  .label { position:relative; background:var(--bg); border:0.12mm solid var(--cut); display:flex; flex-direction:row; align-items:stretch; overflow:hidden; }
+  .content { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:1.6mm 1.8mm; overflow:hidden; }
+  .content > * { flex-shrink:0; }
   .imgbox { width:15mm; height:100%; display:flex; align-items:center; justify-content:center; padding:0.5mm; }
   .imgbox img { width:100%; height:100%; object-fit:cover; }
   .imgbox.fit-contain img { object-fit:contain; }
@@ -168,8 +168,25 @@
       </div>
 
       <div class="sect">
+        <h3>Tamaño de hoja y etiquetas</h3>
+        <div class="row">
+          <div class="field"><label>Tamaño de hoja</label>
+            <select id="sheetSize" onchange="onSizeChange()"><option value="A4">A4 (21 × 29.7 cm)</option><option value="Carta">Carta (21.6 × 27.9 cm)</option></select>
+          </div>
+          <div class="field"><label>Ancho etiqueta (cm)</label><input type="number" id="lw" step="0.1" min="2" max="10" style="width:100px;" oninput="onSizeChange()"></div>
+          <div class="field"><label>Alto etiqueta (cm)</label><input type="number" id="lh" step="0.1" min="1.5" max="10" style="width:100px;" oninput="onSizeChange()"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Columnas</label><input type="number" id="cols" min="1" max="12" style="width:100px;" oninput="onSizeChange()"></div>
+          <div class="field"><label>Filas</label><input type="number" id="rows" min="1" max="14" style="width:100px;" oninput="onSizeChange()"></div>
+          <div class="field"><label>Total por hoja</label><div id="totalLbl" style="font-weight:700;font-size:15px;padding-top:8px;">—</div></div>
+        </div>
+        <div id="sizeWarn" class="subhint" style="color:#a37a1e;"></div>
+      </div>
+
+      <div class="sect">
         <h3>Mis plantillas</h3>
-        <p class="subhint">Guarda esta hoja con un nombre para volver a imprimirla cuando quieras.</p>
+        <p class="subhint">Guarda esta hoja con un nombre para volver a imprimirla o descargarla en PDF cuando quieras.</p>
         <div class="row">
           <input type="text" id="tplName" placeholder="Nombre de la plantilla" style="padding:9px 10px;font-size:13px;border:1px solid #ccc;border-radius:8px;width:240px;">
           <button class="ghost" onclick="guardarPlantilla()">＋ Guardar plantilla</button>
@@ -185,7 +202,7 @@
       <p style="font-size:12px;color:#999;">Al imprimir en Chrome: Márgenes = <b>Ninguno</b> · Escala = <b>100</b> · desmarca "Encabezados y pies" · activa <b>Gráficos de fondo</b>.</p>
     </div>
 
-    <div class="page"><div class="grid" id="grid"></div></div>
+    <div class="page" id="page"><div class="grid" id="grid"></div></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
