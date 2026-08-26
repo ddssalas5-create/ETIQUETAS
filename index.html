@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Etiquetas · Acceso de clientes</title>
 <style>
-  :root { --bg:#ffffff; --cut:#ececec; --c-conc:#777; --accent:#6e1f2a; --c-brand:#6e1f2a; --c-name:#111; --c-house:#111; --c-handle:#111; }
+  :root { --lscale:1; --bg:#ffffff; --cut:#ececec; --c-conc:#777; --accent:#6e1f2a; --c-brand:#6e1f2a; --c-name:#111; --c-house:#111; --c-handle:#111; }
   * { box-sizing:border-box; }
   body { margin:0; font-family:Arial,Helvetica,sans-serif; background:#eeeeee; }
   @page { size:A4; margin:0; }
@@ -63,32 +63,32 @@
   .grid { display:grid; }
 
   .label { position:relative; background:var(--bg); border:0.12mm solid var(--cut); display:flex; flex-direction:row; align-items:stretch; overflow:hidden; }
-  .content { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:1.6mm 1.8mm; overflow:hidden; }
+  .content { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:calc(1.6mm*var(--lscale)) calc(1.8mm*var(--lscale)); overflow:hidden; }
   .content > * { flex-shrink:0; }
-  .imgbox { width:15mm; height:100%; display:flex; align-items:center; justify-content:center; padding:0.5mm; }
+  .imgbox { width:calc(15mm*var(--lscale)); height:100%; display:flex; align-items:center; justify-content:center; padding:calc(0.5mm*var(--lscale)); }
   .imgbox img { width:100%; height:100%; object-fit:cover; }
   .imgbox.fit-contain img { object-fit:contain; }
-  .label.negro .imgbox.left { width:17mm; }
+  .label.negro .imgbox.left { width:calc(17mm*var(--lscale)); }
 
-  .brand { font-family:Arial,Helvetica,sans-serif; font-size:4.6pt; letter-spacing:1.6pt; text-transform:uppercase; color:var(--c-brand); font-weight:700; white-space:nowrap; }
-  .name { font-family:Georgia,'Times New Roman',serif; line-height:1.03; color:var(--c-name); letter-spacing:.2pt; margin-top:1mm; max-width:100%; max-height:8.5mm; overflow:hidden; }
-  .name.s1 { font-size:11pt; } .name.s2 { font-size:9pt; } .name.s3 { font-size:7.2pt; }
-  .sep { width:6mm; border-top:0.35mm solid var(--accent); margin:1mm 0 .8mm; }
-  .insplbl { font-family:Arial,Helvetica,sans-serif; font-size:3pt; letter-spacing:1.2pt; text-transform:uppercase; color:var(--accent); }
-  .house, .casa { font-family:Georgia,'Times New Roman',serif; text-transform:uppercase; letter-spacing:1.5pt; margin-top:.4mm; max-width:100%; overflow:hidden; }
-  .house { color:var(--c-house); } .casa { color:var(--c-house); letter-spacing:1.2pt; margin-top:.7mm; }
-  .house.h1,.casa.h1 { font-size:7pt; } .house.h2,.casa.h2 { font-size:5.6pt; } .house.h3,.casa.h3 { font-size:4.5pt; }
-  .logowrap { margin-top:1mm; } .logoimg { max-width:17mm; max-height:5mm; width:auto; height:auto; object-fit:contain; display:block; margin:0 auto; }
-  .conc { font-family:Arial,Helvetica,sans-serif; font-size:3.1pt; letter-spacing:1pt; text-transform:uppercase; color:var(--c-conc); margin-top:1mm; }
-  .handle { font-family:Arial,Helvetica,sans-serif; font-size:3.6pt; letter-spacing:.2pt; color:var(--c-handle); margin-top:1mm; font-weight:700; white-space:nowrap; }
-  .icons { display:flex; gap:1.2mm; justify-content:center; align-items:center; margin-top:.8mm; }
-  .icons svg { width:2.6mm; height:2.6mm; display:block; }
+  .brand { font-family:Arial,Helvetica,sans-serif; font-size:calc(4.6pt*var(--lscale)); letter-spacing:calc(1.6pt*var(--lscale)); text-transform:uppercase; color:var(--c-brand); font-weight:700; white-space:nowrap; }
+  .name { font-family:Georgia,'Times New Roman',serif; line-height:1.03; color:var(--c-name); letter-spacing:calc(.2pt*var(--lscale)); margin-top:calc(1mm*var(--lscale)); max-width:100%; max-height:calc(8.5mm*var(--lscale)); overflow:hidden; }
+  .name.s1 { font-size:calc(11pt*var(--lscale)); } .name.s2 { font-size:calc(9pt*var(--lscale)); } .name.s3 { font-size:calc(7.2pt*var(--lscale)); }
+  .sep { width:calc(6mm*var(--lscale)); border-top:max(0.15mm,calc(0.35mm*var(--lscale))) solid var(--accent); margin:calc(1mm*var(--lscale)) 0 calc(.8mm*var(--lscale)); }
+  .insplbl { font-family:Arial,Helvetica,sans-serif; font-size:calc(3pt*var(--lscale)); letter-spacing:calc(1.2pt*var(--lscale)); text-transform:uppercase; color:var(--accent); }
+  .house, .casa { font-family:Georgia,'Times New Roman',serif; text-transform:uppercase; letter-spacing:calc(1.5pt*var(--lscale)); margin-top:calc(.4mm*var(--lscale)); max-width:100%; overflow:hidden; }
+  .house { color:var(--c-house); } .casa { color:var(--c-house); letter-spacing:calc(1.2pt*var(--lscale)); margin-top:calc(.7mm*var(--lscale)); }
+  .house.h1,.casa.h1 { font-size:calc(7pt*var(--lscale)); } .house.h2,.casa.h2 { font-size:calc(5.6pt*var(--lscale)); } .house.h3,.casa.h3 { font-size:calc(4.5pt*var(--lscale)); }
+  .logowrap { margin-top:calc(1mm*var(--lscale)); } .logoimg { max-width:calc(17mm*var(--lscale)); max-height:calc(5mm*var(--lscale)); width:auto; height:auto; object-fit:contain; display:block; margin:0 auto; }
+  .conc { font-family:Arial,Helvetica,sans-serif; font-size:calc(3.1pt*var(--lscale)); letter-spacing:calc(1pt*var(--lscale)); text-transform:uppercase; color:var(--c-conc); margin-top:calc(1mm*var(--lscale)); }
+  .handle { font-family:Arial,Helvetica,sans-serif; font-size:calc(3.6pt*var(--lscale)); letter-spacing:calc(.2pt*var(--lscale)); color:var(--c-handle); margin-top:calc(1mm*var(--lscale)); font-weight:700; white-space:nowrap; }
+  .icons { display:flex; gap:calc(1.2mm*var(--lscale)); justify-content:center; align-items:center; margin-top:calc(.8mm*var(--lscale)); }
+  .icons svg { width:calc(2.6mm*var(--lscale)); height:calc(2.6mm*var(--lscale)); display:block; }
 
-  .label.has-img .name.s1 { font-size:8pt; } .label.has-img .name.s2 { font-size:6.8pt; } .label.has-img .name.s3 { font-size:5.6pt; }
-  .label.has-img .house.h1,.label.has-img .casa.h1 { font-size:5.4pt; } .label.has-img .house.h2,.label.has-img .casa.h2 { font-size:4.6pt; } .label.has-img .house.h3,.label.has-img .casa.h3 { font-size:3.7pt; }
-  .label.has-img .brand { font-size:4pt; letter-spacing:1.1pt; }
-  .label.has-img .conc { font-size:2.8pt; } .label.has-img .handle { font-size:3.1pt; }
-  .label.has-img .icons svg { width:2.3mm; height:2.3mm; } .label.has-img .logoimg { max-width:15mm; max-height:4.2mm; }
+  .label.has-img .name.s1 { font-size:calc(8pt*var(--lscale)); } .label.has-img .name.s2 { font-size:calc(6.8pt*var(--lscale)); } .label.has-img .name.s3 { font-size:calc(5.6pt*var(--lscale)); }
+  .label.has-img .house.h1,.label.has-img .casa.h1 { font-size:calc(5.4pt*var(--lscale)); } .label.has-img .house.h2,.label.has-img .casa.h2 { font-size:calc(4.6pt*var(--lscale)); } .label.has-img .house.h3,.label.has-img .casa.h3 { font-size:calc(3.7pt*var(--lscale)); }
+  .label.has-img .brand { font-size:calc(4pt*var(--lscale)); letter-spacing:calc(1.1pt*var(--lscale)); }
+  .label.has-img .conc { font-size:calc(2.8pt*var(--lscale)); } .label.has-img .handle { font-size:calc(3.1pt*var(--lscale)); }
+  .label.has-img .icons svg { width:calc(2.3mm*var(--lscale)); height:calc(2.3mm*var(--lscale)); } .label.has-img .logoimg { max-width:calc(15mm*var(--lscale)); max-height:calc(4.2mm*var(--lscale)); }
 
   .tplrow { display:flex; justify-content:space-between; align-items:center; padding:9px 10px; border:1px solid #eee; border-radius:9px; margin:6px 0; background:#fafafa; font-size:13px; }
   .tplname em { color:#999; font-style:normal; font-size:12px; }

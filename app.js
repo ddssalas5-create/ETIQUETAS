@@ -11,6 +11,7 @@ const PALETTE = [
 const BG = [["#ffffff","Blanco"],["#000000","Negro"],["#f7f3ea","Crema"]];
 const PAGE_SIZES = { A4:{w:210,h:297}, Carta:{w:216,h:279} };
 const MIN_MARGIN = 3; // mm mínimo alrededor de la grilla
+const BASE_LW = 4.0, BASE_LH = 2.7; // cm — tamaño de referencia sobre el que están ajustados texto/imagen/iconos
 
 const FB = '<svg viewBox="0 0 24 24" fill="#1877F2"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.46H15.2c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg>';
 const IG = '<svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="igg" x1="1" y1="23" x2="23" y2="1" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#feda75"/><stop offset=".3" stop-color="#fa7e1e"/><stop offset=".6" stop-color="#d62976"/><stop offset=".85" stop-color="#962fbf"/><stop offset="1" stop-color="#4f5bd5"/></linearGradient></defs><rect x="2.5" y="2.5" width="19" height="19" rx="5.2" stroke="url(#igg)" stroke-width="2"/><circle cx="12" cy="12" r="4.6" stroke="url(#igg)" stroke-width="2"/><circle cx="17.4" cy="6.6" r="1.2" fill="url(#igg)"/></svg>';
@@ -81,6 +82,10 @@ function computeGrid(){
   }
   s.cols=cols; s.rows=rows; s.lw=lwCm; s.lh=lhCm;
   curCols=cols; curRows=rows;
+
+  // Escala proporcional: texto, imagen, logo e iconos crecen/disminuyen junto con el tamaño de etiqueta
+  const scale = Math.min(2.6, Math.max(0.45, Math.min(lwCm/BASE_LW, lhCm/BASE_LH)));
+  document.documentElement.style.setProperty('--lscale', scale.toFixed(3));
 
   const page_el=$('page'); const grid=$('grid');
   page_el.style.width = page.w+'mm'; page_el.style.height = page.h+'mm';
