@@ -154,7 +154,7 @@ function onModelChange(){
   s.model=$('model').value;
   const lwEl=$('lw'), lhEl=$('lh');
   if(s.model==='retrato-completo'){
-    s.lw=4.0; s.lh=5.0; lwEl.disabled=true; lhEl.disabled=true;
+    s.lw=4.5; s.lh=3.5; lwEl.disabled=true; lhEl.disabled=true;
   } else {
     lwEl.disabled=false; lhEl.disabled=false;
     if(s.model==='botella-centro' && s.lh<4.0){ s.lw=4.0; s.lh=5.0; }
