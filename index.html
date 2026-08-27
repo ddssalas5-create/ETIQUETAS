@@ -70,13 +70,16 @@
   .imgbox.side { width:23%; flex-shrink:0; }
   .imgbox img { width:100%; height:100%; object-fit:cover; }
   .imgbox.fit-contain img { object-fit:contain; }
+  /* Horizontal 10ml: dos botellas apiladas (una encima de otra), en vez de una sola */
+  .imgstack { width:36%; height:100%; flex-shrink:0; display:flex; flex-direction:column; }
+  .imgstack .imgbox { width:100%; height:50%; }
 
   .brand { font-family:Arial,Helvetica,sans-serif; font-size:calc(4.6pt*var(--lscale)); letter-spacing:calc(1.6pt*var(--lscale)); text-transform:uppercase; color:var(--c-brand); font-weight:700; white-space:nowrap; }
-  .name { font-family:Georgia,'Times New Roman',serif; line-height:1.03; color:var(--c-name); letter-spacing:calc(.2pt*var(--lscale)); margin-top:calc(1mm*var(--lscale)); max-width:100%; max-height:calc(8.5mm*var(--lscale)); overflow:hidden; overflow-wrap:anywhere; word-break:break-word; }
+  .name { font-family:Georgia,'Times New Roman',serif; line-height:1.03; color:var(--c-name); letter-spacing:calc(.2pt*var(--lscale)); margin-top:calc(1mm*var(--lscale)); max-width:100%; max-height:calc(8.5mm*var(--lscale)); overflow:hidden; }
   .name.s1 { font-size:calc(11pt*var(--lscale)); } .name.s2 { font-size:calc(9pt*var(--lscale)); } .name.s3 { font-size:calc(7.2pt*var(--lscale)); }
   .sep { width:calc(6mm*var(--lscale)); border-top:max(0.15mm,calc(0.35mm*var(--lscale))) solid var(--accent); margin:calc(1mm*var(--lscale)) 0 calc(.8mm*var(--lscale)); }
   .insplbl { font-family:Arial,Helvetica,sans-serif; font-size:calc(3pt*var(--lscale)); letter-spacing:calc(1.2pt*var(--lscale)); text-transform:uppercase; color:var(--accent); }
-  .house, .casa { font-family:Georgia,'Times New Roman',serif; text-transform:uppercase; letter-spacing:calc(1.5pt*var(--lscale)); margin-top:calc(.4mm*var(--lscale)); max-width:100%; overflow:hidden; overflow-wrap:anywhere; word-break:break-word; }
+  .house, .casa { font-family:Georgia,'Times New Roman',serif; text-transform:uppercase; letter-spacing:calc(1.5pt*var(--lscale)); margin-top:calc(.4mm*var(--lscale)); max-width:100%; overflow:hidden; }
   .house { color:var(--c-house); } .casa { color:var(--c-house); letter-spacing:calc(1.2pt*var(--lscale)); margin-top:calc(.7mm*var(--lscale)); }
   .house.h1,.casa.h1 { font-size:calc(7pt*var(--lscale)); } .house.h2,.casa.h2 { font-size:calc(5.6pt*var(--lscale)); } .house.h3,.casa.h3 { font-size:calc(4.5pt*var(--lscale)); }
   .logowrap { margin-top:calc(1mm*var(--lscale)); } .logoimg { max-width:calc(22mm*var(--lscale)); max-height:calc(8mm*var(--lscale)); width:auto; height:auto; object-fit:contain; display:block; margin:0 auto; }

@@ -144,10 +144,12 @@ function onBgChange(){
 
 // ---------- etiquetas: solo 2 formatos, compartidos por ambas pestañas ----------
 // Horizontal: botella a ambos lados, texto al centro — llena mejor las proporciones muy anchas o muy altas.
+// Horizontal: por defecto una sola botella a la izquierda (como siempre). Casos puntuales que SÍ
+// cambian: 2ml lleva una botella a cada lado; 10ml lleva dos botellas apiladas a la izquierda.
 function labelHorizontal(it,s,social){
   const conn=s.conn;
-  const imgHtml = it.img ? '<div class="imgbox side '+(s.fit==='contain'?'fit-contain':'')+'"><img src="'+it.img+'"></div>' : '';
-  return imgHtml+
+  const fitClass = s.fit==='contain' ? 'fit-contain' : '';
+  const contentHtml =
     '<div class="content fitbox">'+
       '<div class="brand">'+esc(brandName)+'</div>'+
       '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
@@ -155,8 +157,19 @@ function labelHorizontal(it,s,social){
       (it.logo?'<div class="opt-logo logowrap"><img class="logoimg" src="'+it.logo+'"></div>':'')+
       (it.conc?'<div class="opt-conc conc">'+esc(it.conc)+'</div>':'')+
       (s.handle?'<div class="opt-social">'+social+'</div>':'')+
-    '</div>'+
-    imgHtml;
+    '</div>';
+  if(!it.img) return contentHtml;
+
+  if(s.volume==='2'){ // botella a cada lado
+    const imgHtml = '<div class="imgbox side '+fitClass+'"><img src="'+it.img+'"></div>';
+    return imgHtml + contentHtml + imgHtml;
+  }
+  if(s.volume==='10'){ // dos botellas apiladas (una encima de otra) a la izquierda
+    const stackHtml = '<div class="imgstack"><div class="imgbox '+fitClass+'"><img src="'+it.img+'"></div><div class="imgbox '+fitClass+'"><img src="'+it.img+'"></div></div>';
+    return stackHtml + contentHtml;
+  }
+  // 3ml, 5ml y cualquier otro: una sola botella a la izquierda
+  return '<div class="imgbox left '+fitClass+'"><img src="'+it.img+'"></div>' + contentHtml;
 }
 // Vertical: casa/nombre arriba, botella grande al centro, logo+concentración+marca+redes abajo.
 function labelVertical(it,s,social){
@@ -213,6 +226,8 @@ function waitImages(root, cb){
 // perfume (casa), concentración — así que se oculta en orden inverso, empezando por lo último.
 const DROP_ORDER = ['.opt-conc', '.opt-house', '.opt-logo', '.opt-social'];
 const SCALE_MIN = 0.4, SCALE_MAX = 2.6, READABLE_FLOOR = 0.68; // por debajo de este umbral preferimos ocultar campos antes que encoger más
+// Ajuste fino SOLO para un tamaño puntual (no afecta a los demás). Ahora mismo: vertical 5ml un poco más grande.
+const SIZE_BOOST = { vertical: { '5': 1.15 } };
 
 function labelFits(labelEl, scale){
   labelEl.style.setProperty('--lscale', scale.toFixed(3));
@@ -262,22 +277,57 @@ function autofitOne(labelEl){
   if(scale===null){ scale = bestScale(labelEl, SCALE_MIN); if(scale===null){ labelFits(labelEl, SCALE_MIN); scale=SCALE_MIN; } }
   return { scale: scale, hidden: hiddenSet };
 }
+// Calcula UNA sola escala y UN solo conjunto de campos ocultos para TODA la hoja, basándose en el
+// perfume más "apretado" de la lista. Así todas las etiquetas se ven del mismo tamaño entre sí,
+// sin importar si un perfume tiene el nombre más corto que otro.
 function autofitLabels(){
+  const s=S().settings;
   const labels = Array.from(document.querySelectorAll('#grid .label'));
   const byItem = {};
   labels.forEach(function(l){ (byItem[l.dataset.itemIdx] = byItem[l.dataset.itemIdx]||[]).push(l); });
-  Object.keys(byItem).forEach(function(idx){
-    const group = byItem[idx];
-    group[0].querySelectorAll('.imgmid').forEach(function(im){ im.style.height='10px'; });
-    const result = autofitOne(group[0]); // mide/ajusta solo la primera; el resto son idénticas
-    fillImgMid(group[0]);
-    for(let i=1;i<group.length;i++){
-      group[i].style.setProperty('--lscale', result.scale.toFixed(3));
+  const idxs = Object.keys(byItem);
+  if(idxs.length===0) return;
+
+  idxs.forEach(function(idx){ byItem[idx][0].querySelectorAll('.imgmid').forEach(function(im){ im.style.height='10px'; }); });
+
+  // 1) cada perfume, por su cuenta: su mejor escala y qué campos necesitaría ocultar
+  const perItem = {};
+  idxs.forEach(function(idx){ perItem[idx] = autofitOne(byItem[idx][0]); });
+
+  // 2) si CUALQUIER perfume necesita ocultar un campo, se oculta en TODOS (para que se vean iguales)
+  const unionHidden = new Set();
+  idxs.forEach(function(idx){ perItem[idx].hidden.forEach(function(sel){ unionHidden.add(sel); }); });
+
+  // 3) con esos campos ya ocultos en todos, se recalcula la escala de cada uno y se usa la MENOR
+  //    de todas — el perfume más exigente define el tamaño para toda la hoja
+  let sharedScale = SCALE_MAX;
+  idxs.forEach(function(idx){
+    const el = byItem[idx][0];
+    unionHidden.forEach(function(sel){ el.querySelectorAll(sel).forEach(function(e){ e.style.display='none'; }); });
+    let sc = bestScale(el, READABLE_FLOOR);
+    if(sc===null){ sc = bestScale(el, SCALE_MIN); if(sc===null) sc = SCALE_MIN; }
+    sharedScale = Math.min(sharedScale, sc);
+  });
+
+  // 4) ajuste fino opcional para un tamaño de etiqueta puntual (ver SIZE_BOOST), solo si de verdad
+  //    sigue cabiendo en TODOS los perfumes de la lista
+  const boost = (SIZE_BOOST[s.orientation]||{})[s.volume] || 1;
+  if(boost>1){
+    const boosted = sharedScale*boost;
+    let allFit = true;
+    idxs.forEach(function(idx){ if(!labelFits(byItem[idx][0], boosted)) allFit=false; });
+    if(allFit) sharedScale = boosted;
+  }
+
+  // 5) aplicar la MISMA escala y los MISMOS campos ocultos a todas las etiquetas de la hoja
+  idxs.forEach(function(idx){
+    byItem[idx].forEach(function(el){
+      el.style.setProperty('--lscale', sharedScale.toFixed(3));
       DROP_ORDER.forEach(function(sel){
-        group[i].querySelectorAll(sel).forEach(function(e){ e.style.display = result.hidden.has(sel) ? 'none' : ''; });
+        el.querySelectorAll(sel).forEach(function(e){ e.style.display = unionHidden.has(sel) ? 'none' : ''; });
       });
-      fillImgMid(group[i]);
-    }
+      fillImgMid(el);
+    });
   });
 }
 // La imagen central de los modelos verticales debe llenar TODO el espacio sobrante entre los textos
