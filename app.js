@@ -11,25 +11,29 @@ const PALETTE = [
 const BG = [["#ffffff","Blanco"],["#000000","Negro"],["#f7f3ea","Crema"]];
 const PAGE_SIZES = { A4:{w:210,h:297}, Carta:{w:216,h:279} };
 const MIN_MARGIN = 3; // mm mínimo alrededor de la grilla
-const BASE_LW = 4.0, BASE_LH = 2.7; // cm — tamaño de referencia sobre el que están ajustados texto/imagen/iconos
+// Tamaños fijos de etiqueta por mL de decant (cm). El ancho es fijo según la orientación;
+// el alto cambia según el tamaño del decant (igual en horizontal y vertical).
+const SIZE_PRESETS = {
+  horizontal: { '2':{w:4.8,h:1.8}, '3':{w:4.8,h:3.2}, '5':{w:4.8,h:5.0}, '10':{w:4.8,h:9.0} },
+  vertical:   { '2':{w:2.0,h:1.8}, '3':{w:2.0,h:3.2}, '5':{w:2.0,h:5.0}, '10':{w:2.0,h:9.0} }
+};
 
 const FB = '<svg viewBox="0 0 24 24" fill="#1877F2"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.46H15.2c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg>';
 const IG = '<svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="igg" x1="1" y1="23" x2="23" y2="1" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#feda75"/><stop offset=".3" stop-color="#fa7e1e"/><stop offset=".6" stop-color="#d62976"/><stop offset=".85" stop-color="#962fbf"/><stop offset="1" stop-color="#4f5bd5"/></linearGradient></defs><rect x="2.5" y="2.5" width="19" height="19" rx="5.2" stroke="url(#igg)" stroke-width="2"/><circle cx="12" cy="12" r="4.6" stroke="url(#igg)" stroke-width="2"/><circle cx="17.4" cy="6.6" r="1.2" fill="url(#igg)"/></svg>';
 const TTP='M16.6 3c.29 2.02 1.55 3.53 3.9 3.75v2.63c-1.42.05-2.68-.34-3.9-1.06v6.72c0 3.4-2.7 5.86-5.93 5.5-2.94-.33-4.98-3.02-4.5-5.98.36-2.28 2.32-4.02 4.75-4.05.33 0 .66.02.98.09v2.83c-.31-.1-.63-.16-.98-.16-1.5 0-2.66 1.35-2.35 2.9.2 1 1.05 1.78 2.07 1.9 1.5.16 2.77-1 2.77-2.46V3h3.12z';
 function TT(dark){ return '<svg viewBox="0 0 24 24"><path d="'+TTP+'" fill="#25F4EE" transform="translate(-0.8,-0.8)"/><path d="'+TTP+'" fill="#FE2C55" transform="translate(0.8,0.8)"/><path d="'+TTP+'" fill="'+(dark?'#eee':'#111')+'"/></svg>'; }
 
-let sb=null, user=null, brandName="TU MARCA", activeTab="clasico";
+let sb=null, user=null, brandName="TU MARCA", socialHandle="@tu.usuario", activeTab="clasico";
 let templates=[];
 let curCols=5, curRows=10; // se recalculan en computeGrid()
 
 function blank(){ return { nombre:"", casa:"", conc:"Eau de Parfum", img:null, logo:null }; }
-const LW_MIN=4.0, LW_MAX=4.5, LH_MIN=2.0, LH_MAX=5.0; // rango permitido para etiquetas de decants
 function defaultSettings(neg){
   return neg
-    ? { bg:"#000000", accent:"#c2a24d", cBrand:"#c2a24d", cName:"#ffffff", cHouse:"#5b8bd0", cHandle:"#ffffff", conn:"", fit:"contain", handle:"@tu.usuario", model:"clasico-negro",
-        sheetSize:"A4", lw:4.0, lh:2.7, cols:5, rows:10 }
+    ? { bg:"#000000", accent:"#c2a24d", cBrand:"#c2a24d", cName:"#ffffff", cHouse:"#5b8bd0", cHandle:"#ffffff", conn:"", fit:"cover", handle:"@tu.usuario",
+        orientation:"horizontal", volume:"3", sheetSize:"A4" }
     : { bg:"#ffffff", accent:"#6e1f2a", cBrand:"#6e1f2a", cName:"#111111", cHouse:"#111111", cHandle:"#111111", conn:"Tipo", fit:"cover", handle:"@tu.usuario",
-        sheetSize:"A4", lw:4.0, lh:2.7, cols:5, rows:10 };
+        orientation:"horizontal", volume:"3", sheetSize:"A4" };
 }
 let sheets = { clasico:{ perfumes:[blank()], settings:defaultSettings(false) }, negro:{ perfumes:[blank()], settings:defaultSettings(true) } };
 function S(){ return sheets[activeTab]; }
@@ -67,54 +71,37 @@ function applyColors(){
 function computeGrid(){
   const s=S().settings;
   const page = PAGE_SIZES[s.sheetSize] || PAGE_SIZES.A4;
-  const lwCm = Math.min(LW_MAX, Math.max(LW_MIN, Number(s.lw)||4.0));
-  const lhCm = Math.min(LH_MAX, Math.max(LH_MIN, Number(s.lh)||2.7));
-  const lw = lwCm*10, lh = lhCm*10; // cm -> mm para las medidas de la hoja
+  const preset = (SIZE_PRESETS[s.orientation] || SIZE_PRESETS.horizontal)[s.volume] || SIZE_PRESETS.horizontal['3'];
+  const lw = preset.w*10, lh = preset.h*10; // cm -> mm
   const maxCols = Math.max(1, Math.floor((page.w - 2*MIN_MARGIN) / lw));
   const maxRows = Math.max(1, Math.floor((page.h - 2*MIN_MARGIN) / lh));
-  let cols = Math.min(Math.max(1, Math.round(Number(s.cols)||maxCols)), maxCols);
-  let rows = Math.min(Math.max(1, Math.round(Number(s.rows)||maxRows)), maxRows);
-
-  const warn = $('sizeWarn');
-  if(warn){
-    if(Number(s.cols)>maxCols || Number(s.rows)>maxRows){
-      warn.textContent = 'Se ajustó a '+cols+' columnas × '+rows+' filas para que quepa en la hoja.';
-    } else { warn.textContent=''; }
-  }
-  s.cols=cols; s.rows=rows; s.lw=lwCm; s.lh=lhCm;
-  curCols=cols; curRows=rows;
+  curCols=maxCols; curRows=maxRows;
 
   const page_el=$('page'); const grid=$('grid');
   page_el.style.width = page.w+'mm'; page_el.style.height = page.h+'mm';
-  const padH = Math.max(MIN_MARGIN, (page.w - cols*lw)/2);
-  const padV = Math.max(MIN_MARGIN, (page.h - rows*lh)/2);
+  const padH = Math.max(MIN_MARGIN, (page.w - maxCols*lw)/2);
+  const padV = Math.max(MIN_MARGIN, (page.h - maxRows*lh)/2);
   page_el.style.padding = padV.toFixed(2)+'mm '+padH.toFixed(2)+'mm';
-  grid.style.gridTemplateColumns = 'repeat('+cols+', '+lw+'mm)';
-  grid.style.gridTemplateRows = 'repeat('+rows+', '+lh+'mm)';
+  grid.style.gridTemplateColumns = 'repeat('+maxCols+', '+lw+'mm)';
+  grid.style.gridTemplateRows = 'repeat('+maxRows+', '+lh+'mm)';
 
-  const totalLbl=$('totalLbl'); if(totalLbl) totalLbl.textContent = (cols*rows)+' etiquetas';
-  return cols*rows;
+  const totalLbl=$('totalLbl'); if(totalLbl) totalLbl.textContent = (maxCols*maxRows)+' etiquetas';
+  const sizeLbl=$('sizeLbl'); if(sizeLbl) sizeLbl.textContent = 'Etiqueta: '+preset.w+' × '+preset.h+' cm';
+  return maxCols*maxRows;
 }
-function onSizeChange(){
-  const s=S().settings;
-  s.sheetSize=$('sheetSize').value; s.lw=parseFloat($('lw').value)||4.0; s.lh=parseFloat($('lh').value)||2.7;
-  s.cols=parseInt($('cols').value)||5; s.rows=parseInt($('rows').value)||10;
-  renderSheet();
-  // refleja valores ya ajustados/clamped en los inputs
-  $('sheetSize').value=s.sheetSize; $('lw').value=s.lw; $('lh').value=s.lh; $('cols').value=s.cols; $('rows').value=s.rows;
-}
+function onOrientationChange(){ S().settings.orientation=$('orientation').value; renderSheet(); }
+function onVolumeChange(){ S().settings.volume=$('volume').value; renderSheet(); }
+function onSizeChange(){ S().settings.sheetSize=$('sheetSize').value; renderSheet(); }
 
 // ---------- editor ----------
 function renderEditor(){
   const box=$('cards'); box.innerHTML='';
-  const s=S().settings;
-  const showConc = activeTab==='clasico' || (activeTab==='negro' && (s.model==='botella-centro'||s.model==='retrato-completo'));
   S().perfumes.forEach(function(p,i){
     const c=document.createElement('div'); c.className='card';
     var html='<div class="grid2">'+
         '<input type="text" placeholder="Nombre del perfume" value="'+esc(p.nombre)+'" oninput="upd('+i+',\'nombre\',this.value)">'+
         '<input type="text" placeholder="Casa / marca" value="'+esc(p.casa)+'" oninput="upd('+i+',\'casa\',this.value)">'+
-        (showConc?'<input class="full" type="text" placeholder="Concentración (opcional)" value="'+esc(p.conc)+'" oninput="upd('+i+',\'conc\',this.value)">':'')+
+        '<input class="full" type="text" placeholder="Concentración (opcional)" value="'+esc(p.conc)+'" oninput="upd('+i+',\'conc\',this.value)">'+
       '</div>'+
       '<div class="imgrow">'+
         (p.img?'<img class="thumb" src="'+p.img+'">':'<span class="hint">Sin imagen</span>')+
@@ -142,25 +129,11 @@ function onLogo(inp,i){ const f=inp.files[0]; if(!f) return; compressImage(f,400
 // ---------- controles ----------
 function readControls(){
   const s=S().settings;
-  s.handle=$('handle').value.trim(); s.conn=$('conn').value.trim(); s.fit=$('fit').value; s.bg=$('bg').value;
+  s.handle=socialHandle; s.conn=$('conn').value.trim(); s.fit=$('fit').value; s.bg=$('bg').value;
   s.accent=$('accent').value; s.cBrand=$('cBrand').value; s.cName=$('cName').value; s.cHouse=$('cHouse').value; s.cHandle=$('cHandle').value;
-  s.sheetSize=$('sheetSize').value; s.lw=parseFloat($('lw').value)||s.lw; s.lh=parseFloat($('lh').value)||s.lh;
-  s.cols=parseInt($('cols').value)||s.cols; s.rows=parseInt($('rows').value)||s.rows;
-  if(activeTab==='negro') s.model=$('model').value;
+  s.orientation=$('orientation').value; s.volume=$('volume').value; s.sheetSize=$('sheetSize').value;
 }
 function onControlChange(){ readControls(); applyColors(); renderSheet(); }
-function onModelChange(){
-  const s=S().settings;
-  s.model=$('model').value;
-  const lwEl=$('lw'), lhEl=$('lh');
-  if(s.model==='retrato-completo'){
-    s.lw=4.5; s.lh=3.5; lwEl.disabled=true; lhEl.disabled=true;
-  } else {
-    lwEl.disabled=false; lhEl.disabled=false;
-    if(s.model==='botella-centro' && s.lh<4.0){ s.lw=4.0; s.lh=5.0; }
-  }
-  fillControls(); applyColors(); renderEditor(); renderSheet();
-}
 function onBgChange(){
   const bg=$('bg').value; const s=S().settings; s.bg=bg;
   if(bg==='#000000'){ Object.assign(s,{accent:'#c2a24d',cBrand:'#c2a24d',cName:'#ffffff',cHouse:'#5b8bd0',cHandle:'#ffffff'}); }
@@ -169,102 +142,31 @@ function onBgChange(){
   fillControls(); applyColors(); renderSheet();
 }
 
-// ---------- etiquetas ----------
-function labelClasico(it,s,social){
+// ---------- etiquetas: solo 2 formatos, compartidos por ambas pestañas ----------
+// Horizontal: botella a un lado, texto al otro lado, en fila.
+function labelHorizontal(it,s,social){
   const conn=s.conn;
-  return '<div class="content fitbox">'+
+  return (it.img?'<div class="imgbox left '+(s.fit==='contain'?'fit-contain':'')+'"><img src="'+it.img+'"></div>':'')+
+    '<div class="content fitbox">'+
       '<div class="brand">'+esc(brandName)+'</div>'+
       '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
-      '<div class="sep"></div>'+
-      (it.casa?'<div class="opt-house">'+(conn?'<div class="insplbl">'+esc(conn)+'</div>':'')+'<div class="house fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div></div>':'')+
+      (it.casa?'<div class="opt-house">'+(conn?'<div class="insplbl">'+esc(conn)+'</div>':'')+'<div class="house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div></div>':'')+
       (it.logo?'<div class="opt-logo logowrap"><img class="logoimg" src="'+it.logo+'"></div>':'')+
       (it.conc?'<div class="opt-conc conc">'+esc(it.conc)+'</div>':'')+
       (s.handle?'<div class="opt-social">'+social+'</div>':'')+
-    '</div>'+
-    (it.img?'<div class="imgbox '+(s.fit==='contain'?'fit-contain':'')+'"><img src="'+it.img+'"></div>':'');
-}
-// ---- Modelos de etiqueta "fondo negro" ----
-function labelNegro(it,s,social){
-  if(s.model==='redes-verticales') return labelNegroVSocial(it,s);
-  if(s.model==='tres-columnas') return labelNegroTresCol(it,s,social);
-  if(s.model==='redes-abajo') return labelNegroRedesAbajo(it,s,social);
-  if(s.model==='botella-centro') return labelNegroVertical(it,s,social,true);
-  if(s.model==='retrato-completo') return labelNegroRetrato(it,s,social);
-  return labelNegroClasico(it,s,social);
-}
-// Modelo 1 — Clásico negro: botella izquierda, texto derecha, logo grande (sin concentración)
-function labelNegroClasico(it,s,social){
-  return (it.img?'<div class="imgbox left fit-contain"><img src="'+it.img+'"></div>':'')+
-    '<div class="content fitbox">'+
-      '<div class="brand">'+esc(brandName)+'</div>'+
-      '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
-      (it.casa?'<div class="opt-house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'')+
-      (it.logo?'<div class="opt-logo logowrap big"><img class="logoimg" src="'+it.logo+'"></div>':'')+
-      (s.handle?'<div class="opt-social">'+social+'</div>':'')+
     '</div>';
 }
-// Modelo 2 — Redes verticales: botella izquierda, marca+nombre+logo al centro, usuario+iconos en columna vertical a la derecha
-function labelNegroVSocial(it,s){
-  const vhandle = s.handle ? '<div class="vhandle">'+esc(s.handle)+'</div>' : '';
-  const strip = '<div class="vicons fitbox">'+vhandle+'<div class="vicons-row">'+FB+IG+TT(true)+'</div></div>';
-  return (it.img?'<div class="imgbox left fit-contain"><img src="'+it.img+'"></div>':'')+
-    '<div class="content fitbox">'+
-      '<div class="brand">'+esc(brandName)+'</div>'+
-      '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
-      (it.logo?'<div class="opt-logo logowrap big"><img class="logoimg" src="'+it.logo+'"></div>':(it.casa?'<div class="opt-house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':''))+
-    '</div>'+
-    (s.handle?strip:'');
-}
-// Modelo 3 — Tres columnas: botella | marca+nombre+casa+redes | columna decorativa con el logo repetido en patrón
-function labelNegroTresCol(it,s,social){
-  return (it.img?'<div class="imgbox left fit-contain"><img src="'+it.img+'"></div>':'')+
-    '<div class="content fitbox">'+
-      '<div class="brand">'+esc(brandName)+'</div>'+
-      '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
-      (it.casa?'<div class="opt-house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'')+
-      (s.handle?'<div class="opt-social">'+social+'</div>':'')+
-    '</div>'+
-    (it.logo?'<div class="sidecol tiled" style="background-image:url(\''+it.logo+'\')"></div>':'');
-}
-// Modelo 4 — Redes abajo: botella + texto arriba, franja de redes a todo el ancho abajo
-function labelNegroRedesAbajo(it,s,social){
-  return '<div class="toprow">'+
-      (it.img?'<div class="imgbox left fit-contain"><img src="'+it.img+'"></div>':'')+
-      '<div class="content fitbox">'+
-        '<div class="brand">'+esc(brandName)+'</div>'+
-        '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
-        (it.casa?'<div class="opt-house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'')+
-        (it.logo?'<div class="opt-logo logowrap"><img class="logoimg" src="'+it.logo+'"></div>':'')+
-      '</div>'+
-    '</div>'+
-    (s.handle?'<div class="botbar opt-social fitbox">'+social+'</div>':'');
-}
-// Modelos 5 y 6 — Verticales (retrato): casa/nombre arriba, botella al centro, concentración+marca+redes abajo.
-function labelNegroVertical(it,s,social,casaPrimero){
-  const nombreYCasa = casaPrimero
-    ? (it.casa?'<div class="opt-house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'') +
-      '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'
-    : '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>' +
-      (it.casa?'<div class="opt-house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'');
+// Vertical: casa/nombre arriba, botella grande al centro, logo+concentración+marca+redes abajo.
+function labelVertical(it,s,social){
   return '<div class="content fitbox vertical">'+
-      nombreYCasa+
-      (it.img?'<div class="imgmid"><img src="'+it.img+'"></div>':'')+
+      (it.casa?'<div class="opt-house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'')+
+      '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
+      (it.img?'<div class="imgmid '+(s.fit==='contain'?'fit-contain':'')+'"><img src="'+it.img+'"></div>':'')+
+      (it.logo?'<div class="opt-logo logowrap"><img class="logoimg" src="'+it.logo+'"></div>':'')+
       (it.conc?'<div class="opt-conc conc">'+esc(it.conc)+'</div>':'')+
       '<div class="brand">'+esc(brandName)+'</div>'+
       (s.handle?'<div class="opt-social">'+social+'</div>':'')+
     '</div>';
-}
-// Modelo — Retrato completo: logo + texto a la izquierda, botella grande que se recorta ("a la mitad") a la derecha
-function labelNegroRetrato(it,s,social){
-  return '<div class="content fitbox">'+
-      (it.logo?'<div class="opt-logo logowrap big"><img class="logoimg" src="'+it.logo+'"></div>':'')+
-      '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
-      (it.casa?'<div class="opt-house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'')+
-      (it.conc?'<div class="opt-conc conc">'+esc(it.conc)+'</div>':'')+
-      '<div class="brand">'+esc(brandName)+'</div>'+
-      (s.handle?'<div class="opt-social">'+social+'</div>':'')+
-    '</div>'+
-    (it.img?'<div class="imgbox retrato"><img src="'+it.img+'"></div>':'');
 }
 function renderSheet(){
   const s=S().settings;
@@ -274,21 +176,23 @@ function renderSheet(){
   if(list.length===0) return;
   const modo=document.querySelector('input[name=modo]:checked').value;
   const social='<div class="handle">'+esc(s.handle)+'</div><div class="icons">'+FB+IG+TT(isDark(s.bg))+'</div>';
+  const vertical = s.orientation==='vertical';
   for(let k=0;k<total;k++){
     const idx = modo==='uno'?0:(k%list.length);
     const it=list[idx];
-    const modelClass = activeTab==='negro' ? (' model-'+(s.model||'clasico-negro')) : '';
-    const el=document.createElement('div'); el.className='label '+activeTab+modelClass+(it.img?' has-img':'');
+    const el=document.createElement('div'); el.className='label '+activeTab+(vertical?' vertical':'')+(it.img?' has-img':'');
     el.dataset.itemIdx=idx;
-    el.innerHTML = activeTab==='negro' ? labelNegro(it,s,social) : labelClasico(it,s,social);
+    el.innerHTML = vertical ? labelVertical(it,s,social) : labelHorizontal(it,s,social);
     grid.appendChild(el);
   }
   requestAnimationFrame(autofitLabels);
   setTimeout(autofitLabels, 150); // segunda pasada por si alguna imagen tarda en decodificar
 }
 
-// Prioridad de qué se oculta primero si de plano no entra todo (lo menos esencial primero)
-const DROP_ORDER = ['.opt-social', '.opt-conc', '.opt-logo', '.opt-house'];
+// Prioridad de qué se oculta primero si de plano no entra todo (lo menos esencial primero).
+// De más a menos importante: botella, nombre, marca de tienda, red social, logo, marca del
+// perfume (casa), concentración — así que se oculta en orden inverso, empezando por lo último.
+const DROP_ORDER = ['.opt-conc', '.opt-house', '.opt-logo', '.opt-social'];
 const SCALE_MIN = 0.4, SCALE_MAX = 2.6, READABLE_FLOOR = 0.68; // por debajo de este umbral preferimos ocultar campos antes que encoger más
 
 function labelFits(labelEl, scale){
@@ -442,34 +346,30 @@ function imprimir(){
 // ---------- controles + pestañas ----------
 function fillControls(){
   const s=S().settings;
-  $('handle').value=s.handle; $('conn').value=s.conn; $('fit').value=s.fit;
+  s.handle = socialHandle; // el cliente no lo edita, lo fija el administrador
+  $('handleDisplay').textContent = socialHandle || '(sin asignar — pídeselo a tu administrador)';
+  $('conn').value=s.conn; $('fit').value=s.fit;
   $('bg').innerHTML=optionsHTML(BG,s.bg);
   $('accent').innerHTML=optionsHTML(PALETTE,s.accent);
   $('cBrand').innerHTML=optionsHTML(PALETTE,s.cBrand);
   $('cName').innerHTML=optionsHTML(PALETTE,s.cName);
   $('cHouse').innerHTML=optionsHTML(PALETTE,s.cHouse);
   $('cHandle').innerHTML=optionsHTML(PALETTE,s.cHandle);
-  $('sheetSize').value=s.sheetSize; $('lw').value=s.lw; $('lh').value=s.lh; $('cols').value=s.cols; $('rows').value=s.rows;
+  $('orientation').value=s.orientation; $('volume').value=s.volume; $('sheetSize').value=s.sheetSize;
   $('tiendaLabel').textContent=brandName;
   $('connField').style.display = activeTab==='negro' ? 'none' : 'block';
-  const modelField=$('modelField');
-  if(modelField){
-    modelField.style.display = activeTab==='negro' ? 'block' : 'none';
-    if(activeTab==='negro') $('model').value = s.model||'clasico-negro';
-  }
-  const locked = activeTab==='negro' && s.model==='retrato-completo';
-  $('lw').disabled = locked; $('lh').disabled = locked;
   document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.tab===activeTab); });
 }
 function setTab(t){ readControls(); activeTab=t; fillControls(); applyColors(); renderEditor(); renderSheet(); }
 
 // ---------- supabase ----------
 async function loadData(){
-  const res=await sb.from('profiles').select('brand_name,data').eq('id',user.id).single();
+  const res=await sb.from('profiles').select('brand_name,social_handle,data').eq('id',user.id).single();
   if(res.error) console.warn(res.error.message);
   const d=res.data;
   if(d){
     brandName = d.brand_name && d.brand_name.trim() ? d.brand_name : brandName;
+    socialHandle = (d.social_handle!==null && d.social_handle!==undefined) ? d.social_handle.trim() : socialHandle;
     if(d.data){
       if(Array.isArray(d.data.templates)) templates=d.data.templates;
       if(d.data.sheets){

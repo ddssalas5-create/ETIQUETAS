@@ -63,12 +63,12 @@
   .grid { display:grid; }
 
   .label { position:relative; background:var(--bg); border:0.12mm solid var(--cut); display:flex; flex-direction:row; align-items:stretch; overflow:hidden; }
+  .label.vertical { flex-direction:column; }
   .content { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:space-evenly; text-align:center; padding:calc(1.6mm*var(--lscale)) calc(1.8mm*var(--lscale)); overflow:hidden; }
   .content > * { flex-shrink:0; }
-  .imgbox { width:34%; height:100%; display:flex; align-items:center; justify-content:center; padding:calc(0.5mm*var(--lscale)); }
+  .imgbox { width:36%; height:100%; display:flex; align-items:center; justify-content:center; padding:calc(0.5mm*var(--lscale)); }
   .imgbox img { width:100%; height:100%; object-fit:cover; }
   .imgbox.fit-contain img { object-fit:contain; }
-  .label.negro .imgbox.left { width:40%; }
 
   .brand { font-family:Arial,Helvetica,sans-serif; font-size:calc(4.6pt*var(--lscale)); letter-spacing:calc(1.6pt*var(--lscale)); text-transform:uppercase; color:var(--c-brand); font-weight:700; white-space:nowrap; }
   .name { font-family:Georgia,'Times New Roman',serif; line-height:1.03; color:var(--c-name); letter-spacing:calc(.2pt*var(--lscale)); margin-top:calc(1mm*var(--lscale)); max-width:100%; max-height:calc(8.5mm*var(--lscale)); overflow:hidden; }
@@ -78,49 +78,23 @@
   .house, .casa { font-family:Georgia,'Times New Roman',serif; text-transform:uppercase; letter-spacing:calc(1.5pt*var(--lscale)); margin-top:calc(.4mm*var(--lscale)); max-width:100%; overflow:hidden; }
   .house { color:var(--c-house); } .casa { color:var(--c-house); letter-spacing:calc(1.2pt*var(--lscale)); margin-top:calc(.7mm*var(--lscale)); }
   .house.h1,.casa.h1 { font-size:calc(7pt*var(--lscale)); } .house.h2,.casa.h2 { font-size:calc(5.6pt*var(--lscale)); } .house.h3,.casa.h3 { font-size:calc(4.5pt*var(--lscale)); }
-  .logowrap { margin-top:calc(1mm*var(--lscale)); } .logoimg { max-width:calc(17mm*var(--lscale)); max-height:calc(5mm*var(--lscale)); width:auto; height:auto; object-fit:contain; display:block; margin:0 auto; }
-  .logowrap.big .logoimg { max-width:calc(30mm*var(--lscale)); max-height:calc(11mm*var(--lscale)); }
+  .logowrap { margin-top:calc(1mm*var(--lscale)); } .logoimg { max-width:calc(22mm*var(--lscale)); max-height:calc(8mm*var(--lscale)); width:auto; height:auto; object-fit:contain; display:block; margin:0 auto; }
   .conc { font-family:Arial,Helvetica,sans-serif; font-size:calc(3.1pt*var(--lscale)); letter-spacing:calc(1pt*var(--lscale)); text-transform:uppercase; color:var(--c-conc); margin-top:calc(1mm*var(--lscale)); }
   .handle { font-family:Arial,Helvetica,sans-serif; font-size:calc(3.6pt*var(--lscale)); letter-spacing:calc(.2pt*var(--lscale)); color:var(--c-handle); margin-top:calc(1mm*var(--lscale)); font-weight:700; white-space:nowrap; }
   .icons { display:flex; gap:calc(1.2mm*var(--lscale)); justify-content:center; align-items:center; margin-top:calc(.8mm*var(--lscale)); }
   .icons svg { width:calc(2.6mm*var(--lscale)); height:calc(2.6mm*var(--lscale)); display:block; }
 
-  /* (el tamaño con imagen ahora lo decide el autoajuste según el espacio real, sin un recorte fijo aparte) */
-  .label.has-img .logowrap.big .logoimg { max-width:calc(21mm*var(--lscale)); max-height:calc(7mm*var(--lscale)); }
-
-  /* Modelo: Redes verticales — usuario escrito verticalmente + iconos, columna a la derecha */
-  .label.model-redes-verticales .content { flex:1; }
-  .vicons { width:calc(7mm*var(--lscale)); flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:calc(1.6mm*var(--lscale)); border-left:max(0.1mm,calc(0.15mm*var(--lscale))) solid rgba(255,255,255,0.15); padding:calc(1mm*var(--lscale)) 0; overflow:hidden; }
-  .vhandle { writing-mode:vertical-rl; transform:rotate(180deg); font-family:Arial,Helvetica,sans-serif; font-weight:700; font-size:calc(3.4pt*var(--lscale)); letter-spacing:calc(.3pt*var(--lscale)); color:var(--c-handle); white-space:nowrap; }
-  .vicons-row { display:flex; flex-direction:column; align-items:center; gap:calc(1.6mm*var(--lscale)); }
-  .vicons svg { width:calc(3mm*var(--lscale)); height:calc(3mm*var(--lscale)); display:block; }
-
-  /* Modelo: Tres columnas — columna decorativa con el logo repetido en patrón vertical */
-  .sidecol { width:24%; flex-shrink:0; overflow:hidden; border-left:max(0.1mm,calc(0.15mm*var(--lscale))) solid rgba(255,255,255,0.15); }
-  .sidecol.tiled { background-repeat:repeat-y; background-position:top center; background-size:88% auto; }
-  .imgbox.right { width:36%; }
-  .label.clasico .imgbox { width:28%; }
-  .label.model-tres-columnas .imgbox.left { width:36%; }
-
-  /* Modelo: Redes abajo — franja de redes a todo el ancho, debajo de imagen+texto */
-  .label.model-redes-abajo { flex-direction:column; }
-  .label.model-redes-abajo .toprow { display:flex; flex-direction:row; align-items:stretch; flex:1; min-height:0; width:100%; }
-  .label.model-redes-abajo .content { padding-bottom:calc(0.6mm*var(--lscale)); }
-  .botbar { flex-shrink:0; width:100%; display:flex; align-items:center; justify-content:center; gap:calc(2.2mm*var(--lscale)); padding:calc(0.8mm*var(--lscale)) calc(1.5mm*var(--lscale)); border-top:max(0.1mm,calc(0.15mm*var(--lscale))) solid rgba(255,255,255,0.15); overflow:hidden; }
-  .botbar .handle { margin-top:0; } .botbar .icons { margin-top:0; }
-
-  /* Modelos verticales (Botella al centro / Retrato completo) — texto arriba y abajo, botella llenando el medio */
+  /* Vertical: texto arriba y abajo, botella grande llenando el medio */
   .content.vertical { justify-content:flex-start; }
   .content.vertical > .opt-house,
   .content.vertical > .name,
+  .content.vertical > .opt-logo,
   .content.vertical > .brand,
   .content.vertical > .opt-conc,
   .content.vertical > .opt-social { margin-top:calc(0.4mm*var(--lscale)); }
   .imgmid { flex:none; min-height:0; width:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; margin:calc(0.6mm*var(--lscale)) 0; }
-  .imgmid img { max-width:78%; max-height:100%; object-fit:contain; }
-  /* Retrato completo: la botella se ve más grande y recortada (no completa) para verse distinta al modelo "Botella al centro" */
-  /* Retrato completo: la botella se ve grande y recortada ("a la mitad"), no completa */
-  .imgbox.retrato { width:52%; }
+  .imgmid img { width:100%; height:100%; object-fit:cover; }
+  .imgmid.fit-contain img { width:auto; height:auto; max-width:92%; max-height:100%; object-fit:contain; }
 
   .tplrow { display:flex; justify-content:space-between; align-items:center; padding:9px 10px; border:1px solid #eee; border-radius:9px; margin:6px 0; background:#fafafa; font-size:13px; }
   .tplname em { color:#999; font-style:normal; font-size:12px; }
@@ -155,24 +129,37 @@
     </div>
 
     <div class="panel">
-      <h2>Tus etiquetas · 4.0 × 2.7 cm · 50 por hoja</h2>
-      <p>Elige la pestaña del tipo de etiqueta. Cada pestaña tiene su propia lista y ajustes — son dos hojas independientes.</p>
+      <h2>Tus etiquetas de decants</h2>
+      <p>Elige la pestaña, la orientación y el tamaño exacto de tu decant. Cada pestaña tiene su propia lista y ajustes.</p>
 
       <div class="tabs">
         <div class="tab active" data-tab="clasico" onclick="setTab('clasico')">✎ Texto clásico</div>
         <div class="tab" data-tab="negro" onclick="setTab('negro')">🖤 Botella en fondo negro</div>
       </div>
 
-      <div class="field" id="modelField" style="display:none;">
-        <label>Estilo de etiqueta</label>
-        <select id="model" onchange="onModelChange()">
-          <option value="clasico-negro">Clásico negro — botella y texto en fila</option>
-          <option value="redes-verticales">Redes verticales — minimalista, iconos a la derecha</option>
-          <option value="tres-columnas">Tres columnas — botella, texto y logo repetido</option>
-          <option value="redes-abajo">Redes abajo — franja de redes a todo el ancho</option>
-          <option value="botella-centro">Botella al centro — vertical, para decants altos</option>
-          <option value="retrato-completo">Retrato completo — vertical, tamaño fijo</option>
-        </select>
+      <div class="sect">
+        <h3>Formato y tamaño</h3>
+        <div class="row">
+          <div class="field"><label>Orientación</label>
+            <select id="orientation" onchange="onOrientationChange()">
+              <option value="horizontal">Horizontal</option>
+              <option value="vertical">Vertical</option>
+            </select>
+          </div>
+          <div class="field"><label>Tamaño de decant</label>
+            <select id="volume" onchange="onVolumeChange()">
+              <option value="2">2 ml</option>
+              <option value="3">3 ml</option>
+              <option value="5">5 ml</option>
+              <option value="10">10 ml</option>
+            </select>
+          </div>
+          <div class="field"><label>Tamaño de hoja</label>
+            <select id="sheetSize" onchange="onSizeChange()"><option value="A4">A4 (21 × 29.7 cm)</option><option value="Carta">Carta (21.6 × 27.9 cm)</option></select>
+          </div>
+          <div class="field"><label>Por hoja</label><div id="totalLbl" style="font-weight:700;font-size:15px;padding-top:8px;">—</div></div>
+        </div>
+        <div class="subhint" id="sizeLbl"></div>
       </div>
 
       <div id="cards"></div>
@@ -180,7 +167,10 @@
 
       <div class="sect">
         <h3>Datos de tu tienda</h3>
-        <div class="field"><label>Usuario / red social (aparece en todas)</label><input type="text" id="handle" oninput="onControlChange()"></div>
+        <div class="field"><label>Usuario / red social (aparece en todas)</label>
+          <div id="handleDisplay" style="padding:9px 10px;font-size:13px;background:#f2f2f2;border:1px solid #ddd;border-radius:8px;color:#333;display:inline-block;min-width:180px;">—</div>
+          <div class="subhint">Esto lo asigna tu administrador; no se puede editar desde aquí.</div>
+        </div>
       </div>
 
       <div class="sect">
@@ -200,7 +190,7 @@
         <div class="field" id="connField">
           <label>Palabra antes de la casa (vacía = ninguna)</label>
           <input type="text" id="conn" list="conns" oninput="onControlChange()">
-          <datalist id="conns"><option value="Tipo"><option value="Versión de"><option value="Al estilo de"><option value="De"><option value=""></datalist>
+          <datalist id="conns"><option value="Tipo"><option value="Versión de"><option value="Al estilo de"><option value="De"><option value="Marca"><option value=""></datalist>
         </div>
         <div class="field"><label>Ajuste de la imagen</label>
           <select id="fit" onchange="onControlChange()"><option value="cover">Rellenar (sin espacios)</option><option value="contain">Contener (imagen completa)</option></select>
@@ -209,24 +199,6 @@
           <label class="opt"><input type="radio" name="modo" value="lista" checked onchange="renderSheet()"> Rellenar hoja con la lista (ciclo)</label>
           <label class="opt"><input type="radio" name="modo" value="uno" onchange="renderSheet()"> Solo el 1° · x50 iguales</label>
         </div>
-      </div>
-
-      <div class="sect">
-        <h3>Tamaño de hoja y etiquetas</h3>
-        <div class="row">
-          <div class="field"><label>Tamaño de hoja</label>
-            <select id="sheetSize" onchange="onSizeChange()"><option value="A4">A4 (21 × 29.7 cm)</option><option value="Carta">Carta (21.6 × 27.9 cm)</option></select>
-          </div>
-          <div class="field"><label>Ancho etiqueta (cm)</label><input type="number" id="lw" step="0.1" min="4.0" max="4.5" style="width:100px;" oninput="onSizeChange()"></div>
-          <div class="field"><label>Alto etiqueta (cm)</label><input type="number" id="lh" step="0.1" min="2.0" max="5.0" style="width:100px;" oninput="onSizeChange()"></div>
-        </div>
-        <div class="row">
-          <div class="field"><label>Columnas</label><input type="number" id="cols" min="1" max="12" style="width:100px;" oninput="onSizeChange()"></div>
-          <div class="field"><label>Filas</label><input type="number" id="rows" min="1" max="14" style="width:100px;" oninput="onSizeChange()"></div>
-          <div class="field"><label>Total por hoja</label><div id="totalLbl" style="font-weight:700;font-size:15px;padding-top:8px;">—</div></div>
-        </div>
-        <div id="sizeWarn" class="subhint" style="color:#a37a1e;"></div>
-        <div class="subhint">Recomendado para decants: ancho 4.0–4.5 cm, alto 2.0–5.0 cm.</div>
       </div>
 
       <div class="sect">
