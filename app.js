@@ -143,10 +143,11 @@ function onBgChange(){
 }
 
 // ---------- etiquetas: solo 2 formatos, compartidos por ambas pestañas ----------
-// Horizontal: botella a un lado, texto al otro lado, en fila.
+// Horizontal: botella a ambos lados, texto al centro — llena mejor las proporciones muy anchas o muy altas.
 function labelHorizontal(it,s,social){
   const conn=s.conn;
-  return (it.img?'<div class="imgbox left '+(s.fit==='contain'?'fit-contain':'')+'"><img src="'+it.img+'"></div>':'')+
+  const imgHtml = it.img ? '<div class="imgbox side '+(s.fit==='contain'?'fit-contain':'')+'"><img src="'+it.img+'"></div>' : '';
+  return imgHtml+
     '<div class="content fitbox">'+
       '<div class="brand">'+esc(brandName)+'</div>'+
       '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
@@ -154,7 +155,8 @@ function labelHorizontal(it,s,social){
       (it.logo?'<div class="opt-logo logowrap"><img class="logoimg" src="'+it.logo+'"></div>':'')+
       (it.conc?'<div class="opt-conc conc">'+esc(it.conc)+'</div>':'')+
       (s.handle?'<div class="opt-social">'+social+'</div>':'')+
-    '</div>';
+    '</div>'+
+    imgHtml;
 }
 // Vertical: casa/nombre arriba, botella grande al centro, logo+concentración+marca+redes abajo.
 function labelVertical(it,s,social){
@@ -185,8 +187,25 @@ function renderSheet(){
     el.innerHTML = vertical ? labelVertical(it,s,social) : labelHorizontal(it,s,social);
     grid.appendChild(el);
   }
-  requestAnimationFrame(autofitLabels);
-  setTimeout(autofitLabels, 150); // segunda pasada por si alguna imagen tarda en decodificar
+  // Espera a que TODAS las imágenes (botellas y logos) terminen de decodificar antes de calcular
+  // el tamaño de letra — así una foto real (más pesada que una prueba) nunca deja una etiqueta a
+  // medio calcular. Además de esta espera real, se hacen dos pasadas más de refuerzo.
+  waitImages(grid, function(){
+    autofitLabels();
+    requestAnimationFrame(autofitLabels);
+    setTimeout(autofitLabels, 300);
+  });
+}
+function waitImages(root, cb){
+  const imgs = Array.from(root.querySelectorAll('img'));
+  if(imgs.length===0){ cb(); return; }
+  let remaining = imgs.length, done = false;
+  function one(){ if(done) return; remaining--; if(remaining<=0){ done=true; cb(); } }
+  imgs.forEach(function(img){
+    if(img.complete && img.naturalWidth>0){ one(); }
+    else { img.addEventListener('load', one, {once:true}); img.addEventListener('error', one, {once:true}); }
+  });
+  setTimeout(function(){ if(!done){ done=true; cb(); } }, 1500); // salvavidas: nunca esperar para siempre
 }
 
 // Prioridad de qué se oculta primero si de plano no entra todo (lo menos esencial primero).

@@ -67,15 +67,16 @@
   .content { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:space-evenly; text-align:center; padding:calc(1.6mm*var(--lscale)) calc(1.8mm*var(--lscale)); overflow:hidden; }
   .content > * { flex-shrink:0; }
   .imgbox { width:36%; height:100%; display:flex; align-items:center; justify-content:center; padding:calc(0.5mm*var(--lscale)); }
+  .imgbox.side { width:23%; flex-shrink:0; }
   .imgbox img { width:100%; height:100%; object-fit:cover; }
   .imgbox.fit-contain img { object-fit:contain; }
 
   .brand { font-family:Arial,Helvetica,sans-serif; font-size:calc(4.6pt*var(--lscale)); letter-spacing:calc(1.6pt*var(--lscale)); text-transform:uppercase; color:var(--c-brand); font-weight:700; white-space:nowrap; }
-  .name { font-family:Georgia,'Times New Roman',serif; line-height:1.03; color:var(--c-name); letter-spacing:calc(.2pt*var(--lscale)); margin-top:calc(1mm*var(--lscale)); max-width:100%; max-height:calc(8.5mm*var(--lscale)); overflow:hidden; }
+  .name { font-family:Georgia,'Times New Roman',serif; line-height:1.03; color:var(--c-name); letter-spacing:calc(.2pt*var(--lscale)); margin-top:calc(1mm*var(--lscale)); max-width:100%; max-height:calc(8.5mm*var(--lscale)); overflow:hidden; overflow-wrap:anywhere; word-break:break-word; }
   .name.s1 { font-size:calc(11pt*var(--lscale)); } .name.s2 { font-size:calc(9pt*var(--lscale)); } .name.s3 { font-size:calc(7.2pt*var(--lscale)); }
   .sep { width:calc(6mm*var(--lscale)); border-top:max(0.15mm,calc(0.35mm*var(--lscale))) solid var(--accent); margin:calc(1mm*var(--lscale)) 0 calc(.8mm*var(--lscale)); }
   .insplbl { font-family:Arial,Helvetica,sans-serif; font-size:calc(3pt*var(--lscale)); letter-spacing:calc(1.2pt*var(--lscale)); text-transform:uppercase; color:var(--accent); }
-  .house, .casa { font-family:Georgia,'Times New Roman',serif; text-transform:uppercase; letter-spacing:calc(1.5pt*var(--lscale)); margin-top:calc(.4mm*var(--lscale)); max-width:100%; overflow:hidden; }
+  .house, .casa { font-family:Georgia,'Times New Roman',serif; text-transform:uppercase; letter-spacing:calc(1.5pt*var(--lscale)); margin-top:calc(.4mm*var(--lscale)); max-width:100%; overflow:hidden; overflow-wrap:anywhere; word-break:break-word; }
   .house { color:var(--c-house); } .casa { color:var(--c-house); letter-spacing:calc(1.2pt*var(--lscale)); margin-top:calc(.7mm*var(--lscale)); }
   .house.h1,.casa.h1 { font-size:calc(7pt*var(--lscale)); } .house.h2,.casa.h2 { font-size:calc(5.6pt*var(--lscale)); } .house.h3,.casa.h3 { font-size:calc(4.5pt*var(--lscale)); }
   .logowrap { margin-top:calc(1mm*var(--lscale)); } .logoimg { max-width:calc(22mm*var(--lscale)); max-height:calc(8mm*var(--lscale)); width:auto; height:auto; object-fit:contain; display:block; margin:0 auto; }
@@ -95,6 +96,7 @@
   .imgmid { flex:none; min-height:0; width:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; margin:calc(0.6mm*var(--lscale)) 0; }
   .imgmid img { width:100%; height:100%; object-fit:cover; }
   .imgmid.fit-contain img { width:auto; height:auto; max-width:92%; max-height:100%; object-fit:contain; }
+  .content.vertical .logoimg { max-width:calc(15mm*var(--lscale)); max-height:calc(5mm*var(--lscale)); }
 
   .tplrow { display:flex; justify-content:space-between; align-items:center; padding:9px 10px; border:1px solid #eee; border-radius:9px; margin:6px 0; background:#fafafa; font-size:13px; }
   .tplname em { color:#999; font-style:normal; font-size:12px; }
