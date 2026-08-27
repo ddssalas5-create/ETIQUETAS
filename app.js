@@ -293,10 +293,33 @@ function autofitOne(labelEl){
   if(scale===null){ scale = bestScale(labelEl, SCALE_MIN); if(scale===null){ labelFits(labelEl, SCALE_MIN); scale=SCALE_MIN; } }
   return { scale: scale, hidden: hiddenSet };
 }
+// Horizontal: cada perfume se ajusta a SU PROPIO tamaño óptimo, de forma independiente (como
+// estaba antes). Vertical: se usa una sola escala compartida para toda la hoja (ver más abajo),
+// porque ahí sí quieres que todos los perfumes se vean del mismo tamaño entre sí.
+function autofitLabels(){
+  const s=S().settings;
+  if(s.orientation==='vertical'){ autofitLabelsShared(); }
+  else { autofitLabelsIndependent(); }
+}
+function autofitLabelsIndependent(){
+  const labels = Array.from(document.querySelectorAll('#grid .label'));
+  const byItem = {};
+  labels.forEach(function(l){ (byItem[l.dataset.itemIdx] = byItem[l.dataset.itemIdx]||[]).push(l); });
+  Object.keys(byItem).forEach(function(idx){
+    const group = byItem[idx];
+    const result = autofitOne(group[0]); // mide/ajusta solo la primera; el resto son idénticas
+    for(let i=1;i<group.length;i++){
+      group[i].style.setProperty('--lscale', result.scale.toFixed(3));
+      DROP_ORDER.forEach(function(sel){
+        group[i].querySelectorAll(sel).forEach(function(e){ e.style.display = result.hidden.has(sel) ? 'none' : ''; });
+      });
+    }
+  });
+}
 // Calcula UNA sola escala y UN solo conjunto de campos ocultos para TODA la hoja, basándose en el
 // perfume más "apretado" de la lista. Así todas las etiquetas se ven del mismo tamaño entre sí,
-// sin importar si un perfume tiene el nombre más corto que otro.
-function autofitLabels(){
+// sin importar si un perfume tiene el nombre más corto que otro. (Solo para vertical.)
+function autofitLabelsShared(){
   const s=S().settings;
   const labels = Array.from(document.querySelectorAll('#grid .label'));
   const byItem = {};
