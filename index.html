@@ -94,12 +94,27 @@
   .content.vertical > .name,
   .content.vertical > .opt-logo,
   .content.vertical > .brand,
+  .content.vertical > .brandline,
   .content.vertical > .opt-conc,
   .content.vertical > .opt-social { margin-top:calc(0.4mm*var(--lscale)); }
   .imgmid { flex:none; min-height:0; width:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; margin:calc(0.6mm*var(--lscale)) 0; }
   .imgmid img { width:100%; height:100%; object-fit:cover; }
   .imgmid.fit-contain img { width:auto; height:auto; max-width:92%; max-height:100%; object-fit:contain; }
   .content.vertical .logoimg { max-width:calc(15mm*var(--lscale)); max-height:calc(5mm*var(--lscale)); }
+
+  /* Vertical 2ml y 3ml: "TU MARCA" y "@usuario" combinados en una sola línea (ahorra espacio para la botella) */
+  .brandline { display:flex; align-items:baseline; justify-content:center; flex-wrap:wrap; gap:calc(0.8mm*var(--lscale)); }
+  .brandline .brand { margin-top:0; }
+  .brandline .handle.inline { margin-top:0; }
+
+  /* Vertical 10ml: un poco más de aire entre los datos, y logo un poco más grande (sin opacar la botella) */
+  .content.vertical.spaced > .opt-house,
+  .content.vertical.spaced > .name,
+  .content.vertical.spaced > .opt-logo,
+  .content.vertical.spaced > .brand,
+  .content.vertical.spaced > .opt-conc,
+  .content.vertical.spaced > .opt-social { margin-top:calc(1.4mm*var(--lscale)); }
+  .logowrap.big10 .logoimg { max-width:calc(19mm*var(--lscale)); max-height:calc(6.5mm*var(--lscale)); }
 
   .tplrow { display:flex; justify-content:space-between; align-items:center; padding:9px 10px; border:1px solid #eee; border-radius:9px; margin:6px 0; background:#fafafa; font-size:13px; }
   .tplname em { color:#999; font-style:normal; font-size:12px; }

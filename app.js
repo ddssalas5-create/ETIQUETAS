@@ -172,15 +172,31 @@ function labelHorizontal(it,s,social){
   return '<div class="imgbox left '+fitClass+'"><img src="'+it.img+'"></div>' + contentHtml;
 }
 // Vertical: casa/nombre arriba, botella grande al centro, logo+concentración+marca+redes abajo.
+// Ajustes puntuales SOLO para 2ml, 3ml y 10ml (ver comentarios en cada caso). 5ml y cualquier otro
+// tamaño no declarado aquí abajo quedan exactamente como estaban antes de este cambio.
 function labelVertical(it,s,social){
-  return '<div class="content fitbox vertical">'+
+  const vol = s.volume;
+  const skipLogo = (vol==='2');                       // 2ml: el logo del perfume no se considera (nunca le quita espacio a la botella)
+  const skipConc = (vol==='3');                        // 3ml: la concentración no se considera (no solo se oculta, no se calcula)
+  const mergeBrandHandle = (vol==='2' || vol==='3');    // 2ml y 3ml: "TU MARCA" y "@usuario" en una sola línea
+  const spaced = (vol==='10');                          // 10ml: un poco más de aire entre los datos
+  const bigLogo10 = (vol==='10');                       // 10ml: logo un poco más grande (sin opacar la botella)
+
+  const showLogo = it.logo && !skipLogo;
+  const showConc = it.conc && !skipConc;
+
+  const brandBlock = mergeBrandHandle
+    ? '<div class="brandline"><span class="brand">'+esc(brandName)+'</span>'+(s.handle?'<span class="handle inline">'+esc(s.handle)+'</span>':'')+'</div>'+
+      (s.handle?'<div class="opt-social"><div class="icons">'+FB+IG+TT(isDark(s.bg))+'</div></div>':'')
+    : '<div class="brand">'+esc(brandName)+'</div>'+(s.handle?'<div class="opt-social">'+social+'</div>':'');
+
+  return '<div class="content fitbox vertical'+(spaced?' spaced':'')+'">'+
       (it.casa?'<div class="opt-house casa fitbox '+houseClass(it.casa)+'">'+esc(it.casa)+'</div>':'')+
       '<div class="name fitbox '+nameClass(it.nombre)+'">'+esc(it.nombre)+'</div>'+
       (it.img?'<div class="imgmid '+(s.fit==='contain'?'fit-contain':'')+'"><img src="'+it.img+'"></div>':'')+
-      (it.logo?'<div class="opt-logo logowrap"><img class="logoimg" src="'+it.logo+'"></div>':'')+
-      (it.conc?'<div class="opt-conc conc">'+esc(it.conc)+'</div>':'')+
-      '<div class="brand">'+esc(brandName)+'</div>'+
-      (s.handle?'<div class="opt-social">'+social+'</div>':'')+
+      (showLogo?'<div class="opt-logo logowrap'+(bigLogo10?' big10':'')+'"><img class="logoimg" src="'+it.logo+'"></div>':'')+
+      (showConc?'<div class="opt-conc conc">'+esc(it.conc)+'</div>':'')+
+      brandBlock+
     '</div>';
 }
 function renderSheet(){
