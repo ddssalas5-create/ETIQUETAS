@@ -315,8 +315,12 @@ function autofitLabelsIndependent(){
   });
 }
 // Calcula UNA sola escala y UN solo conjunto de campos ocultos para TODA la hoja, basándose en el
-// perfume más "apretado" de la lista. Así todas las etiquetas se ven del mismo tamaño entre sí,
-// sin importar si un perfume tiene el nombre más corto que otro. (Solo para vertical.)
+// perfume más "apretado" de la lista, PERO probando distintos niveles de qué tan dispuesto está a
+// ocultar campos opcionales — porque a veces ocultar la concentración (por ejemplo) en TODA la hoja
+// permite que el resto se vea bastante más grande, y eso vale la pena aunque técnicamente ya cupiera
+// todo a un tamaño más chico. Se elige el nivel que da la letra más grande posible, sin pasarse de
+// ocultar más de lo necesario para lograrlo.
+const GOOD_SCALE_TARGET = 1.0; // a partir de este tamaño ya se considera "grande y legible"
 function autofitLabelsShared(){
   const s=S().settings;
   const labels = Array.from(document.querySelectorAll('#grid .label'));
@@ -327,41 +331,49 @@ function autofitLabelsShared(){
 
   idxs.forEach(function(idx){ byItem[idx][0].querySelectorAll('.imgmid').forEach(function(im){ im.style.height='10px'; }); });
 
-  // 1) cada perfume, por su cuenta: su mejor escala y qué campos necesitaría ocultar
-  const perItem = {};
-  idxs.forEach(function(idx){ perItem[idx] = autofitOne(byItem[idx][0]); });
+  function scaleAtLevel(level){
+    idxs.forEach(function(idx){
+      const el = byItem[idx][0];
+      DROP_ORDER.forEach(function(sel,i){ el.querySelectorAll(sel).forEach(function(e){ e.style.display = (i<level)?'none':''; }); });
+    });
+    let sc = SCALE_MAX;
+    idxs.forEach(function(idx){
+      const el = byItem[idx][0];
+      let one = bestScale(el, READABLE_FLOOR);
+      if(one===null){ one = bestScale(el, SCALE_MIN); if(one===null) one = SCALE_MIN; }
+      sc = Math.min(sc, one);
+    });
+    return sc;
+  }
 
-  // 2) si CUALQUIER perfume necesita ocultar un campo, se oculta en TODOS (para que se vean iguales)
-  const unionHidden = new Set();
-  idxs.forEach(function(idx){ perItem[idx].hidden.forEach(function(sel){ unionHidden.add(sel); }); });
+  // probar de menos a más agresivo, y quedarse con el primer nivel que ya da un tamaño "grande y
+  // legible"; si ninguno lo logra, usar el nivel que haya dado el resultado más grande de todos
+  let bestLevel = 0, bestScaleFound = scaleAtLevel(0);
+  if(bestScaleFound < GOOD_SCALE_TARGET){
+    for(let level=1; level<=DROP_ORDER.length; level++){
+      const sc = scaleAtLevel(level);
+      if(sc > bestScaleFound){ bestScaleFound = sc; bestLevel = level; }
+      if(sc >= GOOD_SCALE_TARGET){ break; }
+    }
+  }
+  let sharedScale = scaleAtLevel(bestLevel); // deja el DOM en el estado del nivel elegido
 
-  // 3) con esos campos ya ocultos en todos, se recalcula la escala de cada uno y se usa la MENOR
-  //    de todas — el perfume más exigente define el tamaño para toda la hoja
-  let sharedScale = SCALE_MAX;
-  idxs.forEach(function(idx){
-    const el = byItem[idx][0];
-    unionHidden.forEach(function(sel){ el.querySelectorAll(sel).forEach(function(e){ e.style.display='none'; }); });
-    let sc = bestScale(el, READABLE_FLOOR);
-    if(sc===null){ sc = bestScale(el, SCALE_MIN); if(sc===null) sc = SCALE_MIN; }
-    sharedScale = Math.min(sharedScale, sc);
-  });
-
-  // 4) ajuste fino opcional para un tamaño de etiqueta puntual (ver SIZE_BOOST), solo si de verdad
-  //    sigue cabiendo en TODOS los perfumes de la lista
+  // ajuste fino opcional para un tamaño de etiqueta puntual (ver SIZE_BOOST), solo si de verdad
+  // sigue cabiendo en TODOS los perfumes de la lista
   const boost = (SIZE_BOOST[s.orientation]||{})[s.volume] || 1;
   if(boost>1){
     const boosted = sharedScale*boost;
     let allFit = true;
     idxs.forEach(function(idx){ if(!labelFits(byItem[idx][0], boosted)) allFit=false; });
-    if(allFit) sharedScale = boosted;
+    if(allFit) sharedScale = boosted; else scaleAtLevel(bestLevel); // restaurar visibilidad si no calzó el boost
   }
 
-  // 5) aplicar la MISMA escala y los MISMOS campos ocultos a todas las etiquetas de la hoja
+  // aplicar la MISMA escala y los MISMOS campos ocultos (según bestLevel) a todas las etiquetas
   idxs.forEach(function(idx){
     byItem[idx].forEach(function(el){
       el.style.setProperty('--lscale', sharedScale.toFixed(3));
-      DROP_ORDER.forEach(function(sel){
-        el.querySelectorAll(sel).forEach(function(e){ e.style.display = unionHidden.has(sel) ? 'none' : ''; });
+      DROP_ORDER.forEach(function(sel,i){
+        el.querySelectorAll(sel).forEach(function(e){ e.style.display = (i<bestLevel) ? 'none' : ''; });
       });
       fillImgMid(el);
     });
