@@ -40,8 +40,8 @@ function S(){ return sheets[activeTab]; }
 function clone(x){ return JSON.parse(JSON.stringify(x)); }
 
 function esc(t){ return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function nameClass(n){ const l=(n||'').length; return l<=14?'s1':l<=22?'s2':'s3'; }
-function houseClass(n){ const l=(n||'').length; return l<=12?'h1':l<=18?'h2':'h3'; }
+function nameClass(n){ return 's1'; } // el tamaño real lo decide --lscale de forma continua, sin "cubetas" por largo de texto
+function houseClass(n){ return 'h1'; } // idem
 function $(id){ return document.getElementById(id); }
 function optionsHTML(list,sel){ return list.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===sel?' selected':'')+'>'+o[1]+'</option>';}).join(''); }
 function isDark(hex){ hex=(hex||'#fff').replace('#',''); if(hex.length===3) hex=hex.split('').map(function(c){return c+c;}).join(''); var r=parseInt(hex.substr(0,2),16),g=parseInt(hex.substr(2,2),16),b=parseInt(hex.substr(4,2),16); return (0.299*r+0.587*g+0.114*b)<128; }
