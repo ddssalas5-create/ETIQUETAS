@@ -297,9 +297,7 @@ function autofitOne(labelEl){
 // estaba antes). Vertical: se usa una sola escala compartida para toda la hoja (ver más abajo),
 // porque ahí sí quieres que todos los perfumes se vean del mismo tamaño entre sí.
 function autofitLabels(){
-  const s=S().settings;
-  if(s.orientation==='vertical'){ autofitLabelsShared(); }
-  else { autofitLabelsIndependent(); }
+  autofitLabelsShared(); // mismo sistema para horizontal y vertical: todos los perfumes al mismo tamaño
 }
 function autofitLabelsIndependent(){
   const labels = Array.from(document.querySelectorAll('#grid .label'));
