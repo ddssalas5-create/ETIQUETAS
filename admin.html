@@ -49,22 +49,23 @@
     <div class="topbar"><div>Administrador: <b id="adminEmail"></b></div><button onclick="salir()">Salir</button></div>
     <div class="panel">
       <h2>Crear cliente nuevo</h2>
-      <p>Crea aquí mismo el acceso del cliente: correo, contraseña y el nombre de su marca (no lo podrá cambiar).</p>
+      <p>Crea aquí mismo el acceso del cliente: correo, contraseña, el nombre de su marca y su usuario/red social (ninguno de los dos lo podrá cambiar).</p>
       <div class="newuser">
         <input type="text" id="nu_email" placeholder="Correo del cliente">
         <input type="text" id="nu_pass" placeholder="Contraseña">
         <input type="text" id="nu_brand" placeholder="Nombre de la marca">
+        <input type="text" id="nu_handle" placeholder="@usuario / red social">
         <button class="save" onclick="crearUsuario()">Crear cliente</button>
       </div>
       <div class="rowmsg" id="nu_msg" style="margin-top:8px;display:block;"></div>
 
       <h2 style="margin-top:26px;">Usuarios</h2>
-      <p>Aquí ves todas las cuentas. Puedes actualizar el nombre de marca de cada cliente.</p>
-      <table><thead><tr><th>Correo</th><th>Nombre de marca</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+      <p>Aquí ves todas las cuentas. Puedes actualizar el nombre de marca y el usuario/red social de cada cliente.</p>
+      <table><thead><tr><th>Correo</th><th>Nombre de marca</th><th>Usuario / red social</th><th></th></tr></thead><tbody id="rows"></tbody></table>
       <div class="note">
         <b>¿Cómo doy acceso a un cliente nuevo?</b><br>
         1) En Supabase → Authentication → Users → <b>Add user</b> (correo + contraseña).<br>
-        2) Vuelve aquí y actualiza; aparecerá en la lista. Escribe su nombre de marca y pulsa Guardar.<br>
+        2) Vuelve aquí y actualiza; aparecerá en la lista. Escribe su nombre de marca y su usuario/red social, y pulsa Guardar.<br>
         3) Entrega al cliente la URL de la app + su correo + su contraseña.
       </div>
     </div>
