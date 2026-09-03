@@ -35,7 +35,15 @@ function defaultSettings(neg){
     : { bg:"#ffffff", accent:"#6e1f2a", cBrand:"#6e1f2a", cName:"#111111", cHouse:"#111111", cHandle:"#111111", conn:"Tipo", fit:"cover", handle:"@tu.usuario",
         orientation:"horizontal", volume:"3", sheetSize:"A4" };
 }
-let sheets = { clasico:{ perfumes:[blank()], settings:defaultSettings(false) }, negro:{ perfumes:[blank()], settings:defaultSettings(true) } };
+function defaultMarcaSettings(){
+  return { bg:"#ffffff", accent:"#6e1f2a", cBrand:"#6e1f2a", cName:"#111111", cHouse:"#111111", cHandle:"#111111", conn:"", fit:"cover", handle:"@tu.usuario", sheetSize:"A4" };
+}
+function blankMarcaItem(){ return { img:null, phrase:"", qrUrl:"" }; }
+let sheets = {
+  clasico:{ perfumes:[blank()], settings:defaultSettings(false) },
+  negro:{ perfumes:[blank()], settings:defaultSettings(true) },
+  marca:{ item: blankMarcaItem(), settings: defaultMarcaSettings() }
+};
 function S(){ return sheets[activeTab]; }
 function clone(x){ return JSON.parse(JSON.stringify(x)); }
 
@@ -43,6 +51,24 @@ function esc(t){ return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').repla
 function nameClass(n){ return 's1'; } // el tamaño real lo decide --lscale de forma continua, sin "cubetas" por largo de texto
 function houseClass(n){ return 'h1'; } // idem
 function $(id){ return document.getElementById(id); }
+// Genera el código QR como SVG (vectorial, se imprime nítido a cualquier tamaño).
+function makeQrSvg(url){
+  if(!url || typeof qrcode==='undefined') return null;
+  try{
+    const qr = qrcode(0, 'M');
+    qr.addData(url);
+    qr.make();
+    const count = qr.getModuleCount(), cell = 4;
+    let rects = '';
+    for(let r=0;r<count;r++){
+      for(let c=0;c<count;c++){
+        if(qr.isDark(r,c)) rects += '<rect x="'+(c*cell)+'" y="'+(r*cell)+'" width="'+cell+'" height="'+cell+'"/>';
+      }
+    }
+    const size = count*cell;
+    return '<svg viewBox="0 0 '+size+' '+size+'" xmlns="http://www.w3.org/2000/svg"><rect width="'+size+'" height="'+size+'" fill="#fff"/><g fill="#111">'+rects+'</g></svg>';
+  }catch(e){ return null; }
+}
 function optionsHTML(list,sel){ return list.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===sel?' selected':'')+'>'+o[1]+'</option>';}).join(''); }
 function isDark(hex){ hex=(hex||'#fff').replace('#',''); if(hex.length===3) hex=hex.split('').map(function(c){return c+c;}).join(''); var r=parseInt(hex.substr(0,2),16),g=parseInt(hex.substr(2,2),16),b=parseInt(hex.substr(4,2),16); return (0.299*r+0.587*g+0.114*b)<128; }
 
@@ -71,7 +97,9 @@ function applyColors(){
 function computeGrid(){
   const s=S().settings;
   const page = PAGE_SIZES[s.sheetSize] || PAGE_SIZES.A4;
-  const preset = (SIZE_PRESETS[s.orientation] || SIZE_PRESETS.horizontal)[s.volume] || SIZE_PRESETS.horizontal['3'];
+  const preset = activeTab==='marca'
+    ? { w:11, h:8 }
+    : (SIZE_PRESETS[s.orientation] || SIZE_PRESETS.horizontal)[s.volume] || SIZE_PRESETS.horizontal['3'];
   const lw = preset.w*10, lh = preset.h*10; // cm -> mm
   const maxCols = Math.max(1, Math.floor((page.w - 2*MIN_MARGIN) / lw));
   const maxRows = Math.max(1, Math.floor((page.h - 2*MIN_MARGIN) / lh));
@@ -86,15 +114,21 @@ function computeGrid(){
   grid.style.gridTemplateRows = 'repeat('+maxRows+', '+lh+'mm)';
 
   const totalLbl=$('totalLbl'); if(totalLbl) totalLbl.textContent = (maxCols*maxRows)+' etiquetas';
+  const totalLblMarca=$('totalLblMarca'); if(totalLblMarca) totalLblMarca.textContent = (maxCols*maxRows)+' tarjetas';
   const sizeLbl=$('sizeLbl'); if(sizeLbl) sizeLbl.textContent = 'Etiqueta: '+preset.w+' × '+preset.h+' cm';
   return maxCols*maxRows;
 }
 function onOrientationChange(){ S().settings.orientation=$('orientation').value; renderSheet(); }
 function onVolumeChange(){ S().settings.volume=$('volume').value; renderSheet(); }
-function onSizeChange(){ S().settings.sheetSize=$('sheetSize').value; renderSheet(); }
+function onSizeChange(){
+  const sel = activeTab==='marca' ? $('sheetSizeMarca') : $('sheetSize');
+  S().settings.sheetSize = sel.value;
+  renderSheet();
+}
 
 // ---------- editor ----------
 function renderEditor(){
+  if(activeTab==='marca'){ renderMarcaEditor(); return; }
   const box=$('cards'); box.innerHTML='';
   S().perfumes.forEach(function(p,i){
     const c=document.createElement('div'); c.className='card';
@@ -121,6 +155,24 @@ function renderEditor(){
 function upd(i,k,v){ S().perfumes[i][k]=v; renderSheet(); }
 function addPerfume(){ S().perfumes.push(blank()); renderEditor(); renderSheet(); }
 function delPerfume(i){ S().perfumes.splice(i,1); if(S().perfumes.length===0) addPerfume(); else { renderEditor(); renderSheet(); } }
+
+// ---------- editor de la tarjeta de marca ----------
+function renderMarcaEditor(){
+  const it = sheets.marca.item;
+  const wrap = $('marcaImgThumbWrap');
+  if(wrap) wrap.innerHTML = it.img ? '<img class="thumb" src="'+it.img+'">' : '<span class="hint">Sin imagen</span>';
+  $('marcaPhrase').value = it.phrase||'';
+  $('marcaQrUrl').value = it.qrUrl||'';
+}
+function onMarcaImg(input){
+  const f=input.files[0]; if(!f) return;
+  compressImage(f,900,function(u){ sheets.marca.item.img=u; renderMarcaEditor(); renderSheet(); });
+}
+function onMarcaChange(){
+  sheets.marca.item.phrase = $('marcaPhrase').value;
+  sheets.marca.item.qrUrl = $('marcaQrUrl').value.trim();
+  renderSheet();
+}
 function quitarImg(i){ S().perfumes[i].img=null; renderEditor(); renderSheet(); }
 function quitarLogo(i){ S().perfumes[i].logo=null; renderEditor(); renderSheet(); }
 function onImg(inp,i){ const f=inp.files[0]; if(!f) return; compressImage(f,700,function(u){ S().perfumes[i].img=u; renderEditor(); renderSheet(); }); }
@@ -131,7 +183,8 @@ function readControls(){
   const s=S().settings;
   s.handle=socialHandle; s.conn=$('conn').value.trim(); s.fit=$('fit').value; s.bg=$('bg').value;
   s.accent=$('accent').value; s.cBrand=$('cBrand').value; s.cName=$('cName').value; s.cHouse=$('cHouse').value; s.cHandle=$('cHandle').value;
-  s.orientation=$('orientation').value; s.volume=$('volume').value; s.sheetSize=$('sheetSize').value;
+  if(activeTab==='marca'){ s.sheetSize=$('sheetSizeMarca').value; }
+  else { s.orientation=$('orientation').value; s.volume=$('volume').value; s.sheetSize=$('sheetSize').value; }
 }
 function onControlChange(){ readControls(); applyColors(); renderSheet(); }
 function onBgChange(){
@@ -200,6 +253,7 @@ function labelVertical(it,s,social){
     '</div>';
 }
 function renderSheet(){
+  if(activeTab==='marca'){ renderSheetMarca(); return; }
   const s=S().settings;
   const total = computeGrid();
   const list=S().perfumes.filter(function(p){return (p.nombre||'').trim()!=='';});
@@ -219,6 +273,35 @@ function renderSheet(){
   // Espera a que TODAS las imágenes (botellas y logos) terminen de decodificar antes de calcular
   // el tamaño de letra — así una foto real (más pesada que una prueba) nunca deja una etiqueta a
   // medio calcular. Además de esta espera real, se hacen dos pasadas más de refuerzo.
+  waitImages(grid, function(){
+    autofitLabels();
+    requestAnimationFrame(autofitLabels);
+    setTimeout(autofitLabels, 300);
+  });
+}
+// Tarjeta de marca: una sola pieza (imagen + frase + redes + QR), repetida para llenar la hoja.
+function labelMarca(item,s,social,qrSvg){
+  return (item.img?'<div class="imgbox left '+(s.fit==='contain'?'fit-contain':'')+'"><img src="'+item.img+'"></div>':'')+
+    '<div class="content fitbox">'+
+      (item.phrase?'<div class="phrase fitbox">"'+esc(item.phrase)+'"</div>':'')+
+      (s.handle?'<div class="opt-social">'+social+'</div>':'')+
+    '</div>'+
+    '<div class="qrbox">'+(qrSvg || '<div class="qrplaceholder">Escribe un link para el QR</div>')+'</div>';
+}
+function renderSheetMarca(){
+  const s = sheets.marca.settings;
+  const item = sheets.marca.item;
+  const total = computeGrid();
+  const grid=$('grid'); grid.innerHTML='';
+  if(!item.img && !item.phrase) return;
+  const social = s.handle ? ('<div class="handle">'+esc(s.handle)+'</div><div class="icons">'+FB+IG+TT(isDark(s.bg))+'</div>') : '';
+  const qrSvg = makeQrSvg(item.qrUrl);
+  for(let k=0;k<total;k++){
+    const el=document.createElement('div'); el.className='label marca'+(item.img?' has-img':'');
+    el.dataset.itemIdx='0';
+    el.innerHTML = labelMarca(item,s,social,qrSvg);
+    grid.appendChild(el);
+  }
   waitImages(grid, function(){
     autofitLabels();
     requestAnimationFrame(autofitLabels);
@@ -403,7 +486,7 @@ function renderTemplates(){
   if(templates.length===0){ box.innerHTML='<div class="hint" style="margin-top:6px;">Aún no tienes plantillas guardadas.</div>'; return; }
   templates.forEach(function(t){
     const d=document.createElement('div'); d.className='tplrow';
-    const tipo = t.tab==='negro' ? 'Fondo negro' : 'Texto clásico';
+    const tipo = t.tab==='negro' ? 'Fondo negro' : t.tab==='marca' ? 'Tarjeta de marca' : 'Texto clásico';
     d.innerHTML='<span class="tplname">'+esc(t.name)+' <em>· '+tipo+'</em></span>'+
       '<span><button class="mini" onclick="cargarPlantilla(\''+t.id+'\')">Cargar</button> '+
       '<button class="mini" onclick="descargarPDF(\''+t.id+'\')">⬇ PDF</button> '+
@@ -412,8 +495,11 @@ function renderTemplates(){
   });
 }
 function snapshot(nombre){
+  const isMarca = activeTab==='marca';
   return { id:String(Date.now())+Math.floor(Math.random()*999), name:nombre, tab:activeTab,
-           perfumes:clone(S().perfumes), settings:clone(S().settings) };
+           perfumes: isMarca ? undefined : clone(S().perfumes),
+           item: isMarca ? clone(sheets.marca.item) : undefined,
+           settings:clone(S().settings) };
 }
 function guardarPlantilla(){
   readControls();
@@ -424,7 +510,13 @@ function guardarPlantilla(){
 }
 function cargarPlantilla(id){
   const t=templates.find(function(x){return x.id===id;}); if(!t) return;
-  activeTab=t.tab; sheets[t.tab].perfumes=clone(t.perfumes); sheets[t.tab].settings=Object.assign(defaultSettings(t.tab==='negro'), clone(t.settings));
+  activeTab=t.tab;
+  if(t.tab==='marca'){
+    sheets.marca.item = t.item ? Object.assign(blankMarcaItem(), clone(t.item)) : blankMarcaItem();
+    sheets.marca.settings = Object.assign(defaultMarcaSettings(), clone(t.settings));
+  } else {
+    sheets[t.tab].perfumes=clone(t.perfumes); sheets[t.tab].settings=Object.assign(defaultSettings(t.tab==='negro'), clone(t.settings));
+  }
   fillControls(); applyColors(); renderEditor(); renderSheet();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -438,14 +530,20 @@ function eliminarPlantilla(id){
 // con el nombre ya sugerido, para que quede organizado en tu carpeta de Descargas).
 function descargarPDF(id){
   const t=templates.find(function(x){return x.id===id;}); if(!t) return;
-  const prevTab=activeTab, prevClasico=clone(sheets.clasico), prevNegro=clone(sheets.negro), prevTitle=document.title;
-  activeTab=t.tab; sheets[t.tab].perfumes=clone(t.perfumes); sheets[t.tab].settings=Object.assign(defaultSettings(t.tab==='negro'), clone(t.settings));
+  const prevTab=activeTab, prevClasico=clone(sheets.clasico), prevNegro=clone(sheets.negro), prevMarca=clone(sheets.marca), prevTitle=document.title;
+  activeTab=t.tab;
+  if(t.tab==='marca'){
+    sheets.marca.item = t.item ? Object.assign(blankMarcaItem(), clone(t.item)) : blankMarcaItem();
+    sheets.marca.settings = Object.assign(defaultMarcaSettings(), clone(t.settings));
+  } else {
+    sheets[t.tab].perfumes=clone(t.perfumes); sheets[t.tab].settings=Object.assign(defaultSettings(t.tab==='negro'), clone(t.settings));
+  }
   fillControls(); applyColors(); renderEditor(); renderSheet();
   document.title = (brandName||'Etiquetas').replace(/[\\/:*?"<>|]/g,'') + ' - ' + t.name.replace(/[\\/:*?"<>|]/g,'');
   setTimeout(function(){
     window.print();
     document.title=prevTitle;
-    activeTab=prevTab; sheets.clasico=prevClasico; sheets.negro=prevNegro;
+    activeTab=prevTab; sheets.clasico=prevClasico; sheets.negro=prevNegro; sheets.marca=prevMarca;
     fillControls(); applyColors(); renderEditor(); renderSheet();
   }, 200);
 }
@@ -466,16 +564,26 @@ function fillControls(){
   const s=S().settings;
   s.handle = socialHandle; // el cliente no lo edita, lo fija el administrador
   $('handleDisplay').textContent = socialHandle || '(sin asignar — pídeselo a tu administrador)';
-  $('conn').value=s.conn; $('fit').value=s.fit;
+  $('conn').value=s.conn||''; $('fit').value=s.fit;
   $('bg').innerHTML=optionsHTML(BG,s.bg);
   $('accent').innerHTML=optionsHTML(PALETTE,s.accent);
   $('cBrand').innerHTML=optionsHTML(PALETTE,s.cBrand);
   $('cName').innerHTML=optionsHTML(PALETTE,s.cName);
   $('cHouse').innerHTML=optionsHTML(PALETTE,s.cHouse);
   $('cHandle').innerHTML=optionsHTML(PALETTE,s.cHandle);
-  $('orientation').value=s.orientation; $('volume').value=s.volume; $('sheetSize').value=s.sheetSize;
   $('tiendaLabel').textContent=brandName;
-  $('connField').style.display = activeTab==='negro' ? 'none' : 'block';
+
+  const isMarca = activeTab==='marca';
+  $('formatoSect').style.display = isMarca ? 'none' : 'block';
+  $('marcaFormatoSect').style.display = isMarca ? 'block' : 'none';
+  $('cardsSect').style.display = isMarca ? 'none' : 'block';
+  $('marcaSect').style.display = isMarca ? 'block' : 'none';
+  $('modoRow').style.display = isMarca ? 'none' : 'flex';
+  $('connField').style.display = (isMarca || activeTab==='negro') ? 'none' : 'block';
+
+  if(isMarca){ $('sheetSizeMarca').value=s.sheetSize; }
+  else { $('orientation').value=s.orientation; $('volume').value=s.volume; $('sheetSize').value=s.sheetSize; }
+
   document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.tab===activeTab); });
 }
 function setTab(t){ readControls(); activeTab=t; fillControls(); applyColors(); renderEditor(); renderSheet(); }
@@ -497,6 +605,10 @@ async function loadData(){
             if(Array.isArray(d.data.sheets[t].perfumes)&&d.data.sheets[t].perfumes.length) sheets[t].perfumes=d.data.sheets[t].perfumes;
           }
         });
+        if(d.data.sheets.marca){
+          sheets.marca.settings = Object.assign(defaultMarcaSettings(), d.data.sheets.marca.settings||{});
+          if(d.data.sheets.marca.item) sheets.marca.item = Object.assign(blankMarcaItem(), d.data.sheets.marca.item);
+        }
       } else if(d.data.settings){
         sheets.clasico.settings=Object.assign(defaultSettings(false), d.data.settings);
         if(Array.isArray(d.data.perfumes)&&d.data.perfumes.length) sheets.clasico.perfumes=d.data.perfumes;
